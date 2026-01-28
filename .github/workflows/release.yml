@@ -61,9 +61,8 @@ jobs:
           rm -f Serilog*.dll
           rm -f Scrutor.dll
           rm -f System.Diagnostics.EventLog.dll
-          # Remove debug symbols and deps file
+          # Remove debug symbols (keep deps.json for native library resolution)
           rm -f *.pdb
-          rm -f *.deps.json
           # Keep only Linux x64 runtime (most CS2 servers)
           find runtimes -mindepth 1 -maxdepth 1 -type d ! -name 'linux-x64' -exec rm -rf {} +
 
