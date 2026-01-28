@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "0.3.2";
+    public override string ModuleVersion => "0.3.3";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
@@ -119,10 +119,11 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
     {
         if (_services == null) return HookResult.Continue;
 
-        // Show knife round message
+        // Show knife round message and enforce knife-only settings
         if (_services.MatchService.IsKnifeRound)
         {
             Server.PrintToChatAll($"{Config.ChatPrefix} {Config.KnifeRoundMessage}");
+            Server.ExecuteCommand("mp_buy_allow_guns 0");  // Reinforce after restart
         }
 
         return HookResult.Continue;

@@ -201,6 +201,13 @@ public class MatchService
         _waitingForSideChoice = false;
         _knifeRoundWinnerTeam = 0;
 
+        // Ensure warmup mode is ended before starting knife round
+        Server.ExecuteCommand("mp_warmup_end");
+
+        // Disable warmup respawn settings
+        Server.ExecuteCommand("mp_respawn_on_death_ct 0");
+        Server.ExecuteCommand("mp_respawn_on_death_t 0");
+
         // Knife round settings
         Server.ExecuteCommand("mp_free_armor 1");
         Server.ExecuteCommand("mp_give_player_c4 0");
