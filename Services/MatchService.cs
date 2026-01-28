@@ -43,7 +43,7 @@ public class MatchService
         Server.ExecuteCommand($"mp_startmoney {_warmupMoney}");
         Server.ExecuteCommand($"mp_maxmoney {_warmupMoney}");
         Server.ExecuteCommand($"mp_afterroundmoney {_warmupMoney}");
-        Server.ExecuteCommand("mp_buy_anywhere 1");
+        Server.ExecuteCommand("mp_buy_anywhere 0");
         Server.ExecuteCommand("mp_buytime 9999");
         Server.ExecuteCommand("mp_free_armor 2");
         Server.ExecuteCommand("mp_weapons_allow_zeus 1");
@@ -206,6 +206,7 @@ public class MatchService
         Server.ExecuteCommand("mp_give_player_c4 0");
         Server.ExecuteCommand("mp_ct_default_secondary \"\"");
         Server.ExecuteCommand("mp_t_default_secondary \"\"");
+        Server.ExecuteCommand("mp_buy_allow_guns 0");
         Server.ExecuteCommand("mp_restartgame 1");
 
         if (_enableLogging && _database != null && admin != null)
@@ -236,6 +237,7 @@ public class MatchService
         Server.ExecuteCommand("mp_give_player_c4 1");
         Server.ExecuteCommand("mp_ct_default_secondary \"weapon_hkp2000\"");
         Server.ExecuteCommand("mp_t_default_secondary \"weapon_glock\"");
+        Server.ExecuteCommand("mp_buy_allow_guns 255");
 
         if (!stayOnSide)
         {
