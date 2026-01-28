@@ -371,6 +371,13 @@ public class AdminCommands
             return;
         }
 
+        var playerCount = PlayerFinder.GetPlayerCount();
+        if (playerCount < _config.MinPlayersToStart)
+        {
+            command.ReplyToCommand($"{_config.ChatPrefix} Not enough players. Need at least {_config.MinPlayersToStart}.");
+            return;
+        }
+
         var adminName = caller?.PlayerName ?? "Console";
         Server.PrintToChatAll($"{_config.ChatPrefix} Warmup ended by {adminName}.");
         _matchService.EndWarmup(caller);

@@ -1,4 +1,5 @@
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CS2Admin.Commands;
 using CS2Admin.Config;
 using CS2Admin.Database;
@@ -26,7 +27,7 @@ public class CS2AdminServiceCollection : IDisposable
 
     private bool _disposed;
 
-    public CS2AdminServiceCollection(PluginConfig config, string moduleDirectory)
+    public CS2AdminServiceCollection(PluginConfig config, string moduleDirectory, BasePlugin plugin)
     {
         Config = config;
 
@@ -54,7 +55,7 @@ public class CS2AdminServiceCollection : IDisposable
         AdminCommands = new AdminCommands(config, PlayerService, BanService, MuteService, MatchService);
         VoteCommands = new VoteCommands(config, VoteService);
         AdminManagementCommands = new AdminManagementCommands(config, AdminService);
-        ChatCommandHandler = new ChatCommandHandler(config, PlayerService, BanService, MuteService, MatchService, VoteService, AdminManagementCommands);
+        ChatCommandHandler = new ChatCommandHandler(plugin, config, PlayerService, BanService, MuteService, MatchService, VoteService, AdminManagementCommands);
         PlayerConnectionHandler = new PlayerConnectionHandler(BanService, MuteService, MatchService, config);
     }
 

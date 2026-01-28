@@ -64,4 +64,13 @@ public class PluginConfig : BasePluginConfig
 
     [JsonPropertyName("MinPlayersToStart")]
     public int MinPlayersToStart { get; set; } = 2;
+
+    [JsonPropertyName("EnableKnifeRound")]
+    public bool EnableKnifeRound { get; set; } = true;
+
+    [JsonPropertyName("KnifeRoundMessage")]
+    public string KnifeRoundMessage { get; set; } = "Knife round! Winner chooses side.";
+
+    [JsonPropertyName("KnifeRoundWinnerMessage")]
+    public string KnifeRoundWinnerMessage { get; set; } = "{team} won the knife round! Type !stay or !switch to choose side.";
 }

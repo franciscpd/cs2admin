@@ -10,10 +10,18 @@ public class MatchService
     private readonly bool _enableLogging;
     private bool _isPaused;
     private bool _isWarmup;
+    private bool _isKnifeRound;
+    private bool _isKnifeOnly;
+    private int _knifeRoundWinnerTeam; // 2 = T, 3 = CT
+    private bool _waitingForSideChoice;
     private int _warmupMoney;
 
     public bool IsPaused => _isPaused;
     public bool IsWarmup => _isWarmup;
+    public bool IsKnifeRound => _isKnifeRound;
+    public bool IsKnifeOnly => _isKnifeOnly;
+    public bool WaitingForSideChoice => _waitingForSideChoice;
+    public int KnifeRoundWinnerTeam => _knifeRoundWinnerTeam;
 
     public MatchService(DatabaseService? database = null, bool enableLogging = false, int warmupMoney = 60000)
     {
@@ -169,13 +177,149 @@ public class MatchService
         {
             if (player.IsValid && !player.IsBot && !player.IsHLTV && player.PlayerPawn?.Value != null)
             {
-                var moneyServices = player.InGameMoneyServices;
-                if (moneyServices != null)
-                {
-                    moneyServices.Account = amount;
-                    Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInGameMoneyServices");
-                }
+                GiveMoneyToPlayer(player);
             }
         }
+    }
+
+    public void GiveMoneyToPlayer(CCSPlayerController player)
+    {
+        if (player.PlayerPawn?.Value == null) return;
+
+        var moneyServices = player.InGameMoneyServices;
+        if (moneyServices != null)
+        {
+            moneyServices.Account = _warmupMoney;
+            Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInGameMoneyServices");
+        }
+    }
+
+    public void StartKnifeRound(CCSPlayerController? admin = null)
+    {
+        _isKnifeRound = true;
+        _isKnifeOnly = true;
+        _waitingForSideChoice = false;
+        _knifeRoundWinnerTeam = 0;
+
+        // Knife round settings
+        Server.ExecuteCommand("mp_free_armor 1");
+        Server.ExecuteCommand("mp_give_player_c4 0");
+        Server.ExecuteCommand("mp_ct_default_secondary \"\"");
+        Server.ExecuteCommand("mp_t_default_secondary \"\"");
+        Server.ExecuteCommand("mp_restartgame 1");
+
+        if (_enableLogging && _database != null && admin != null)
+        {
+            _database.LogAction("KNIFE_ROUND_START", admin.SteamID, admin.PlayerName, null, null, null);
+        }
+    }
+
+    public void EndKnifeRound(int winnerTeam)
+    {
+        _knifeRoundWinnerTeam = winnerTeam;
+        _waitingForSideChoice = true;
+        _isKnifeRound = false;
+
+        // Pause match while waiting for side choice
+        Server.ExecuteCommand("mp_pause_match");
+    }
+
+    public void ChooseSide(bool stayOnSide, CCSPlayerController? admin = null)
+    {
+        if (!_waitingForSideChoice) return;
+
+        _waitingForSideChoice = false;
+        _isKnifeOnly = false;
+
+        // Reset to normal settings
+        Server.ExecuteCommand("mp_free_armor 0");
+        Server.ExecuteCommand("mp_give_player_c4 1");
+        Server.ExecuteCommand("mp_ct_default_secondary \"weapon_hkp2000\"");
+        Server.ExecuteCommand("mp_t_default_secondary \"weapon_glock\"");
+
+        if (!stayOnSide)
+        {
+            // Switch sides
+            Server.ExecuteCommand("mp_swapteams");
+        }
+
+        // Unpause and restart for actual match
+        Server.ExecuteCommand("mp_unpause_match");
+        Server.ExecuteCommand("mp_restartgame 3");
+
+        if (_enableLogging && _database != null && admin != null)
+        {
+            _database.LogAction("SIDE_CHOICE", admin.SteamID, admin.PlayerName, null, null, stayOnSide ? "Stay" : "Switch");
+        }
+    }
+
+    public void EnableKnifeOnly(CCSPlayerController? admin = null)
+    {
+        _isKnifeOnly = true;
+
+        Server.ExecuteCommand("mp_ct_default_secondary \"\"");
+        Server.ExecuteCommand("mp_t_default_secondary \"\"");
+        Server.ExecuteCommand("mp_give_player_c4 0");
+
+        // Strip weapons from all players
+        StripAllPlayersWeapons();
+
+        if (_enableLogging && _database != null && admin != null)
+        {
+            _database.LogAction("KNIFE_ONLY_ENABLE", admin.SteamID, admin.PlayerName, null, null, null);
+        }
+    }
+
+    public void DisableKnifeOnly(CCSPlayerController? admin = null)
+    {
+        _isKnifeOnly = false;
+
+        Server.ExecuteCommand("mp_ct_default_secondary \"weapon_hkp2000\"");
+        Server.ExecuteCommand("mp_t_default_secondary \"weapon_glock\"");
+        Server.ExecuteCommand("mp_give_player_c4 1");
+
+        if (_enableLogging && _database != null && admin != null)
+        {
+            _database.LogAction("KNIFE_ONLY_DISABLE", admin.SteamID, admin.PlayerName, null, null, null);
+        }
+    }
+
+    public void StripAllPlayersWeapons()
+    {
+        var players = Utilities.GetPlayers();
+        foreach (var player in players)
+        {
+            if (player.IsValid && !player.IsBot && !player.IsHLTV && player.PawnIsAlive)
+            {
+                StripPlayerWeapons(player);
+            }
+        }
+    }
+
+    public void StripPlayerWeapons(CCSPlayerController player)
+    {
+        if (player.PlayerPawn?.Value == null) return;
+
+        var pawn = player.PlayerPawn.Value;
+        if (pawn.WeaponServices?.MyWeapons == null) return;
+
+        foreach (var weapon in pawn.WeaponServices.MyWeapons)
+        {
+            if (weapon.Value == null) continue;
+
+            var weaponData = weapon.Value.DesignerName;
+            if (weaponData != null && !weaponData.Contains("knife") && !weaponData.Contains("bayonet"))
+            {
+                weapon.Value.Remove();
+            }
+        }
+    }
+
+    public void ResetKnifeRoundState()
+    {
+        _isKnifeRound = false;
+        _isKnifeOnly = false;
+        _waitingForSideChoice = false;
+        _knifeRoundWinnerTeam = 0;
     }
 }

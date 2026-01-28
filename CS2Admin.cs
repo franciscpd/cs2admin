@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "0.1.1";
+    public override string ModuleVersion => "0.2.0";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
@@ -25,7 +25,7 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 
     public override void Load(bool hotReload)
     {
-        _services = new CS2AdminServiceCollection(Config, ModuleDirectory);
+        _services = new CS2AdminServiceCollection(Config, ModuleDirectory, this);
         _services.PlayerConnectionHandler.SetPlugin(this);
 
         // Register console commands
@@ -40,11 +40,13 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
         // Register event handlers
         RegisterEventHandler<EventPlayerConnectFull>(_services.PlayerConnectionHandler.OnPlayerConnect);
         RegisterEventHandler<EventPlayerDisconnect>(_services.PlayerConnectionHandler.OnPlayerDisconnect);
+        RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
 
-        // Register map/round events for warmup
+        // Register map/round events for warmup and knife round
         if (Config.EnableWarmupMode)
         {
             RegisterEventHandler<EventRoundStart>(OnRoundStart);
+            RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
             RegisterListener<Listeners.OnMapStart>(OnMapStart);
         }
 
@@ -75,6 +77,9 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 
         if (_services == null || !Config.EnableWarmupMode) return;
 
+        // Reset knife round state
+        _services.MatchService.ResetKnifeRoundState();
+
         // Delay warmup start to ensure server is ready
         AddTimer(2.0f, () =>
         {
@@ -90,6 +95,60 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 
     private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
+        if (_services == null) return HookResult.Continue;
+
+        // Show knife round message
+        if (_services.MatchService.IsKnifeRound)
+        {
+            Server.PrintToChatAll($"{Config.ChatPrefix} {Config.KnifeRoundMessage}");
+        }
+
+        return HookResult.Continue;
+    }
+
+    private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
+    {
+        if (_services == null) return HookResult.Continue;
+
+        // Handle knife round end
+        if (_services.MatchService.IsKnifeRound)
+        {
+            var winnerTeam = @event.Winner; // 2 = T, 3 = CT
+            _services.MatchService.EndKnifeRound(winnerTeam);
+
+            var teamName = winnerTeam == 2 ? "Terrorists" : "Counter-Terrorists";
+            var message = Config.KnifeRoundWinnerMessage.Replace("{team}", teamName);
+            Server.PrintToChatAll($"{Config.ChatPrefix} {message}");
+        }
+
+        return HookResult.Continue;
+    }
+
+    private HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
+    {
+        if (_services == null) return HookResult.Continue;
+
+        var player = @event.Userid;
+        if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
+            return HookResult.Continue;
+
+        if (_services.MatchService.IsWarmup)
+        {
+            _services.MatchService.GiveMoneyToPlayer(player);
+        }
+
+        // Strip weapons during knife only mode
+        if (_services.MatchService.IsKnifeOnly)
+        {
+            AddTimer(0.1f, () =>
+            {
+                if (player.IsValid && player.PawnIsAlive)
+                {
+                    _services.MatchService.StripPlayerWeapons(player);
+                }
+            });
+        }
+
         return HookResult.Continue;
     }
 

@@ -11,7 +11,8 @@ A comprehensive server administration plugin for Counter-Strike 2, built with Co
 - **Admin Management**: Add/remove admins and groups via chat or console
 - **Welcome Messages**: Customizable welcome and join announcements
 - **Persistent Storage**: SQLite database for bans, mutes, admins, and logs
-- **Chat Commands**: Both `.command` and console `css_command` syntax supported
+- **Chat Commands**: Both `!command` and console `css_command` syntax supported
+- **Interactive Menus**: Player selection menus for admin commands
 
 ## Requirements
 
@@ -77,61 +78,96 @@ To set up your first admin, edit `addons/counterstrikesharp/configs/admins.json`
 
 Replace `YOUR_STEAM_ID_64` with your Steam ID (e.g., `76561198012345678`).
 
-After that, you can manage admins in-game using `.add_admin` command.
+After that, you can manage admins in-game using `!add_admin` command.
 
 ## Commands
 
-### Public Chat Commands (`.` prefix)
+### Public Chat Commands (`!` prefix)
 
 | Command | Description |
 |---------|-------------|
-| `.votekick <player>` | Start vote to kick player |
-| `.votepause` | Start vote to pause match |
-| `.voterestart` | Start vote to restart match |
-| `.votechangemap <map>` | Start vote to change map |
-| `.yes` / `.no` | Cast vote |
+| `!help` | Show interactive help menu |
+| `!votekick [player]` | Start vote to kick player (shows menu if no player specified) |
+| `!votepause` | Start vote to pause match |
+| `!voterestart` | Start vote to restart match |
+| `!votemap <map>` | Start vote to change map |
+| `!yes` / `!no` | Cast vote |
 
-### Admin Chat Commands (`.` prefix)
-
-| Command | Permission | Description |
-|---------|------------|-------------|
-| `.kick <player> [reason]` | @css/kick | Kick player |
-| `.ban <player> <duration> [reason]` | @css/ban | Ban player |
-| `.unban <steamid>` | @css/ban | Unban by SteamID |
-| `.mute <player> [duration]` | @css/chat | Mute player |
-| `.unmute <player>` | @css/chat | Unmute player |
-| `.slay <player>` | @css/slay | Kill player |
-| `.slap <player> [damage]` | @css/slay | Slap player |
-| `.respawn <player>` | @css/slay | Respawn player |
-| `.changemap <map>` | @css/changemap | Change map |
-| `.pause` / `.unpause` | @css/generic | Pause/unpause match |
-| `.restart` | @css/generic | Restart match |
-
-### Warmup Commands (`.` prefix)
+### Admin Chat Commands (`!` prefix)
 
 | Command | Permission | Description |
 |---------|------------|-------------|
-| `.start` | @css/generic | Start match (end warmup) |
-| `.warmup` | @css/generic | Start warmup mode |
-| `.endwarmup` | @css/generic | End warmup without restart |
+| `!kick [player] [reason]` | @css/kick | Kick player (shows menu if no player) |
+| `!ban [player] [duration] [reason]` | @css/ban | Ban player (shows menu if no player) |
+| `!unban <steamid>` | @css/ban | Unban by SteamID |
+| `!mute [player] [duration]` | @css/chat | Mute player (shows menu if no player) |
+| `!unmute [player]` | @css/chat | Unmute player (shows menu if no player) |
+| `!slay [player]` | @css/slay | Kill player (shows menu if no player) |
+| `!slap [player] [damage]` | @css/slay | Slap player (shows menu if no player) |
+| `!respawn [player]` | @css/slay | Respawn player (shows menu if no player) |
+| `!map <map>` | @css/changemap | Change map |
+| `!pause` / `!unpause` | @css/generic | Pause/unpause match |
+| `!restart` | @css/generic | Restart match |
 
-### Admin Management Commands (`.` prefix)
+### Warmup & Match Commands (`!` prefix)
 
 | Command | Permission | Description |
 |---------|------------|-------------|
-| `.add_admin <steamid\|player> <flags>` | @css/root | Add a new admin |
-| `.remove_admin <steamid\|player>` | @css/root | Remove an admin |
-| `.list_admins` | @css/root | List all admins |
-| `.add_group <name> <flags> [immunity]` | @css/root | Create admin group |
-| `.remove_group <name>` | @css/root | Remove admin group |
-| `.list_groups` | @css/root | List all groups |
-| `.set_group <steamid\|player> <group>` | @css/root | Assign admin to group |
-| `.reload_admins` | @css/root | Reload admins from database |
+| `!start` | @css/generic | Start match (knife round if enabled) |
+| `!warmup` | @css/generic | Start warmup mode |
+| `!endwarmup` | @css/generic | End warmup without restart |
+| `!knife` | @css/generic | Toggle knife only mode |
+
+### Knife Round Commands (`!` prefix)
+
+| Command | Permission | Description |
+|---------|------------|-------------|
+| `!stay` | Winner team | Stay on current side after knife round |
+| `!switch` | Winner team | Switch sides after knife round |
+
+### Admin Management Commands (`!` prefix)
+
+| Command | Permission | Description |
+|---------|------------|-------------|
+| `!add_admin <steamid\|player> <flags>` | @css/root | Add a new admin |
+| `!remove_admin <steamid\|player>` | @css/root | Remove an admin |
+| `!list_admins` | @css/root | List all admins |
+| `!add_group <name> <flags> [immunity]` | @css/root | Create admin group |
+| `!remove_group <name>` | @css/root | Remove admin group |
+| `!list_groups` | @css/root | List all groups |
+| `!set_group <steamid\|player> <group>` | @css/root | Assign admin to group |
+| `!reload_admins` | @css/root | Reload admins from database |
 
 ### Console Commands (`css_` prefix)
 
 All chat commands are available as console commands with `css_` prefix:
 - `css_kick`, `css_ban`, `css_votekick`, `css_start`, `css_warmup`, etc.
+
+## Interactive Player Selection
+
+When you run admin commands without specifying a player, an interactive menu appears:
+
+1. **Simple commands** (`!kick`, `!slay`, `!respawn`, `!unmute`, `!votekick`):
+   - Shows a list of players to select
+
+2. **Commands with duration** (`!ban`, `!mute`):
+   - First shows player selection
+   - Then shows duration options (e.g., 30min, 1h, 1d, permanent)
+
+3. **Slap command** (`!slap`):
+   - First shows player selection
+   - Then shows damage options (0, 5, 10, 25, 50)
+
+**Example:**
+```
+Player types: !kick
+Menu appears: "Kick - Select Player"
+   1. PlayerOne
+   2. PlayerTwo
+   3. PlayerThree
+Player selects option 2
+PlayerTwo is kicked
+```
 
 ## Duration Format
 
@@ -170,7 +206,10 @@ Configuration is stored in `addons/counterstrikesharp/configs/plugins/CS2Admin/C
   "WarmupMoney": 60000,
   "WarmupMessage": "Server is in warmup. Waiting for admin to start the match.",
   "MatchStartMessage": "Match starting! Good luck, have fun!",
-  "MinPlayersToStart": 2
+  "MinPlayersToStart": 2,
+  "EnableKnifeRound": true,
+  "KnifeRoundMessage": "Knife round! Winner chooses side.",
+  "KnifeRoundWinnerMessage": "{team} won the knife round! Type !stay or !switch to choose side."
 }
 ```
 
@@ -208,6 +247,16 @@ Configuration is stored in `addons/counterstrikesharp/configs/plugins/CS2Admin/C
 | `MatchStartMessage` | `Match starting!...` | Message when match starts |
 | `MinPlayersToStart` | `2` | Minimum players to start match |
 
+### Knife Round Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `EnableKnifeRound` | `true` | Enable knife round before match |
+| `KnifeRoundMessage` | `Knife round!...` | Message shown during knife round |
+| `KnifeRoundWinnerMessage` | `{team} won...` | Message when team wins |
+
+**Available variables:** `{team}` (Terrorists or Counter-Terrorists)
+
 ## Warmup Mode
 
 When enabled, the server automatically enters warmup mode on map load:
@@ -218,7 +267,19 @@ When enabled, the server automatically enters warmup mode on map load:
 - Free armor
 - Infinite buy time
 
-Use `.start` to begin the match when ready.
+Use `!start` to begin the match when ready.
+
+## Knife Round
+
+When enabled, a knife-only round is played before the match starts:
+
+1. Admin uses `!start` to end warmup
+2. Knife round begins - players only have knives
+3. The winning team is announced
+4. Winning team captain types `!stay` or `!switch` to choose side
+5. Match begins with the chosen sides
+
+**Manual knife mode:** Admins can toggle knife-only mode at any time with `!knife`
 
 ## Player Targeting
 
@@ -245,9 +306,9 @@ The database is created automatically on first run.
 Use chat or console commands to manage admins:
 
 ```
-.add_admin 76561198012345678 @css/kick,@css/ban,@css/slay
-.add_group moderator @css/kick,@css/ban,@css/chat 50
-.set_group 76561198012345678 moderator
+!add_admin 76561198012345678 @css/kick,@css/ban,@css/slay
+!add_group moderator @css/kick,@css/ban,@css/chat 50
+!set_group 76561198012345678 moderator
 ```
 
 ### Using Config File
@@ -286,7 +347,7 @@ Configure in `addons/counterstrikesharp/configs/admins.json`:
 
 ### Commands not working
 - Verify you have the required permissions
-- Check if the command prefix is correct (`.` for chat, `css_` for console)
+- Check if the command prefix is correct (`!` for chat, `css_` for console)
 - Ensure the player name/SteamID is valid
 
 ### Database errors
