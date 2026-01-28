@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "0.1.0";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
