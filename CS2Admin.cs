@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "0.1.0";
+    public override string ModuleVersion => "0.1.1";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
@@ -90,17 +90,6 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 
     private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
-        if (_services == null) return HookResult.Continue;
-
-        // Show warmup message at round start if in warmup mode
-        if (_services.MatchService.IsWarmup)
-        {
-            AddTimer(1.0f, () =>
-            {
-                Server.PrintToChatAll($"{Config.ChatPrefix} {Config.WarmupMessage}");
-            });
-        }
-
         return HookResult.Continue;
     }
 

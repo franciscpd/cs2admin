@@ -41,8 +41,8 @@ public class ChatCommandHandler
     {
         if (player == null || !player.IsValid) return HookResult.Continue;
 
-        var message = info.GetArg(1);
-        if (string.IsNullOrWhiteSpace(message) || !message.StartsWith('.'))
+        var message = info.GetArg(1)?.Trim('"', ' ');
+        if (string.IsNullOrWhiteSpace(message) || !message.StartsWith('!'))
             return HookResult.Continue;
 
         // Check if player is muted
@@ -60,6 +60,9 @@ public class ChatCommandHandler
 
         var handled = command switch
         {
+            // Help command
+            "help" => HandleHelp(player),
+
             // Public vote commands
             "votekick" => HandleVoteKick(player, args),
             "votepause" => HandleVotePause(player),
@@ -107,7 +110,7 @@ public class ChatCommandHandler
     {
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .votekick <player>");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !votekick <player>");
             return true;
         }
 
@@ -157,7 +160,7 @@ public class ChatCommandHandler
     {
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .votechangemap <map>");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !votechangemap <map>");
             return true;
         }
 
@@ -204,7 +207,7 @@ public class ChatCommandHandler
 
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .kick <player> [reason]");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !kick <player> [reason]");
             return true;
         }
 
@@ -232,7 +235,7 @@ public class ChatCommandHandler
 
         if (args.Length < 2)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .ban <player> <duration> [reason]");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !ban <player> <duration> [reason]");
             return true;
         }
 
@@ -264,7 +267,7 @@ public class ChatCommandHandler
 
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .unban <steamid>");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !unban <steamid>");
             return true;
         }
 
@@ -296,7 +299,7 @@ public class ChatCommandHandler
 
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .mute <player> [duration] [reason]");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !mute <player> [duration] [reason]");
             return true;
         }
 
@@ -337,7 +340,7 @@ public class ChatCommandHandler
 
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .unmute <player>");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !unmute <player>");
             return true;
         }
 
@@ -370,7 +373,7 @@ public class ChatCommandHandler
 
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .slay <player>");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !slay <player>");
             return true;
         }
 
@@ -396,7 +399,7 @@ public class ChatCommandHandler
 
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .slap <player> [damage]");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !slap <player> [damage]");
             return true;
         }
 
@@ -428,7 +431,7 @@ public class ChatCommandHandler
 
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .respawn <player>");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !respawn <player>");
             return true;
         }
 
@@ -454,7 +457,7 @@ public class ChatCommandHandler
 
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .changemap <map>");
+            player.PrintToChat($"{_config.ChatPrefix} Usage: !changemap <map>");
             return true;
         }
 
@@ -578,6 +581,56 @@ public class ChatCommandHandler
 
         Server.PrintToChatAll($"{_config.ChatPrefix} Warmup ended by {player.PlayerName}.");
         _matchService.EndWarmup(player);
+        return true;
+    }
+
+    #endregion
+
+    #region Help Command
+
+    private bool HandleHelp(CCSPlayerController player)
+    {
+        player.PrintToChat($"{_config.ChatPrefix} === Comandos Disponíveis ===");
+        player.PrintToChat($" !votekick <player> - Votar para kickar");
+        player.PrintToChat($" !votepause - Votar para pausar");
+        player.PrintToChat($" !voterestart - Votar para reiniciar");
+        player.PrintToChat($" !votemap <map> - Votar para trocar mapa");
+        player.PrintToChat($" !yes / !no - Votar sim/não");
+
+        var hasKick = AdminManager.PlayerHasPermissions(player, "@css/kick");
+        var hasBan = AdminManager.PlayerHasPermissions(player, "@css/ban");
+        var hasChat = AdminManager.PlayerHasPermissions(player, "@css/chat");
+        var hasSlay = AdminManager.PlayerHasPermissions(player, "@css/slay");
+        var hasMap = AdminManager.PlayerHasPermissions(player, "@css/changemap");
+        var hasGeneric = AdminManager.PlayerHasPermissions(player, "@css/generic");
+
+        if (hasKick || hasBan || hasChat || hasSlay || hasMap || hasGeneric)
+        {
+            player.PrintToChat($"{_config.ChatPrefix} === Comandos de Admin ===");
+
+            if (hasKick)
+                player.PrintToChat($" !kick <player> [reason]");
+
+            if (hasBan)
+                player.PrintToChat($" !ban/!unban <player> <duration> [reason]");
+
+            if (hasChat)
+                player.PrintToChat($" !mute/!unmute <player>");
+
+            if (hasSlay)
+                player.PrintToChat($" !slay/!slap/!respawn <player>");
+
+            if (hasMap)
+                player.PrintToChat($" !map <mapname> - Trocar mapa");
+
+            if (hasGeneric)
+            {
+                player.PrintToChat($" !pause/!unpause - Pausar/despausar");
+                player.PrintToChat($" !warmup/!endwarmup - Controle do warmup");
+                player.PrintToChat($" !start - Iniciar partida");
+            }
+        }
+
         return true;
     }
 

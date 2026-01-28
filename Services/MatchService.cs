@@ -44,6 +44,9 @@ public class MatchService
         Server.ExecuteCommand("mp_respawn_on_death_ct 1");
         Server.ExecuteCommand("mp_respawn_on_death_t 1");
 
+        // Give money immediately to all players already on the server
+        GiveMoneyToAllPlayers(_warmupMoney);
+
         if (_enableLogging && _database != null && admin != null)
         {
             _database.LogAction("WARMUP_START", admin.SteamID, admin.PlayerName, null, null, null);
@@ -155,6 +158,23 @@ public class MatchService
             if (player.IsValid && !player.IsBot && !player.IsHLTV && player.PawnIsAlive == false)
             {
                 player.Respawn();
+            }
+        }
+    }
+
+    private void GiveMoneyToAllPlayers(int amount)
+    {
+        var players = Utilities.GetPlayers();
+        foreach (var player in players)
+        {
+            if (player.IsValid && !player.IsBot && !player.IsHLTV && player.PlayerPawn?.Value != null)
+            {
+                var moneyServices = player.InGameMoneyServices;
+                if (moneyServices != null)
+                {
+                    moneyServices.Account = amount;
+                    Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInGameMoneyServices");
+                }
             }
         }
     }
