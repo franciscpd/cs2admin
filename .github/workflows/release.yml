@@ -50,6 +50,23 @@ jobs:
       - name: Publish
         run: dotnet publish CS2Admin.csproj --configuration Release --output ./publish --no-build
 
+      - name: Clean up publish directory
+        run: |
+          cd publish
+          # Remove DLLs already provided by CounterStrikeSharp
+          rm -f CounterStrikeSharp.API.dll
+          rm -f McMaster.NETCore.Plugins.dll
+          rm -f Microsoft.DotNet.PlatformAbstractions.dll
+          rm -f Microsoft.Extensions.*.dll
+          rm -f Serilog*.dll
+          rm -f Scrutor.dll
+          rm -f System.Diagnostics.EventLog.dll
+          # Remove debug symbols and deps file
+          rm -f *.pdb
+          rm -f *.deps.json
+          # Keep only Linux x64 runtime (most CS2 servers)
+          find runtimes -mindepth 1 -maxdepth 1 -type d ! -name 'linux-x64' -exec rm -rf {} +
+
       - name: Get version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
