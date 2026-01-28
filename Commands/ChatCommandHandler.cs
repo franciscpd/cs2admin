@@ -132,14 +132,14 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new CenterHtmlMenu(title, _plugin);
+        var menu = new ChatMenu(title);
 
         foreach (var target in players)
         {
             menu.AddMenuOption(target.PlayerName, (p, opt) => onSelect(p, target));
         }
 
-        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
+        MenuManager.OpenChatMenu(admin, menu);
     }
 
     #endregion
@@ -326,7 +326,7 @@ public class ChatCommandHandler
 
     private void ShowBanDurationMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new CenterHtmlMenu($"Ban {target.PlayerName} - Duration", _plugin);
+        var menu = new ChatMenu($"Ban {target.PlayerName} - Duration");
 
         menu.AddMenuOption("30 minutes", (p, o) => ExecuteBan(p, target, TimeSpan.FromMinutes(30)));
         menu.AddMenuOption("1 hour", (p, o) => ExecuteBan(p, target, TimeSpan.FromHours(1)));
@@ -334,7 +334,7 @@ public class ChatCommandHandler
         menu.AddMenuOption("1 week", (p, o) => ExecuteBan(p, target, TimeSpan.FromDays(7)));
         menu.AddMenuOption("Permanent", (p, o) => ExecuteBan(p, target, null));
 
-        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
+        MenuManager.OpenChatMenu(admin, menu);
     }
 
     private void ExecuteBan(CCSPlayerController admin, CCSPlayerController target, TimeSpan? duration)
@@ -425,7 +425,7 @@ public class ChatCommandHandler
 
     private void ShowMuteDurationMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new CenterHtmlMenu($"Mute {target.PlayerName} - Duration", _plugin);
+        var menu = new ChatMenu($"Mute {target.PlayerName} - Duration");
 
         menu.AddMenuOption("5 minutes", (p, o) => ExecuteMute(p, target, TimeSpan.FromMinutes(5)));
         menu.AddMenuOption("15 minutes", (p, o) => ExecuteMute(p, target, TimeSpan.FromMinutes(15)));
@@ -433,7 +433,7 @@ public class ChatCommandHandler
         menu.AddMenuOption("1 hour", (p, o) => ExecuteMute(p, target, TimeSpan.FromHours(1)));
         menu.AddMenuOption("Permanent", (p, o) => ExecuteMute(p, target, null));
 
-        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
+        MenuManager.OpenChatMenu(admin, menu);
     }
 
     private void ExecuteMute(CCSPlayerController admin, CCSPlayerController target, TimeSpan? duration)
@@ -555,7 +555,7 @@ public class ChatCommandHandler
 
     private void ShowSlapDamageMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new CenterHtmlMenu($"Slap {target.PlayerName} - Damage", _plugin);
+        var menu = new ChatMenu($"Slap {target.PlayerName} - Damage");
 
         menu.AddMenuOption("No damage", (p, o) => ExecuteSlap(p, target, 0));
         menu.AddMenuOption("5 damage", (p, o) => ExecuteSlap(p, target, 5));
@@ -563,7 +563,7 @@ public class ChatCommandHandler
         menu.AddMenuOption("25 damage", (p, o) => ExecuteSlap(p, target, 25));
         menu.AddMenuOption("50 damage", (p, o) => ExecuteSlap(p, target, 50));
 
-        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
+        MenuManager.OpenChatMenu(admin, menu);
     }
 
     private void ExecuteSlap(CCSPlayerController admin, CCSPlayerController target, int damage)
@@ -827,7 +827,7 @@ public class ChatCommandHandler
 
     private bool HandleHelp(CCSPlayerController player)
     {
-        var menu = new CenterHtmlMenu("CS2Admin Help", _plugin);
+        var menu = new ChatMenu("CS2Admin Help");
 
         menu.AddMenuOption("Vote Commands", (p, opt) => ShowVoteCommands(p));
 
@@ -843,13 +843,13 @@ public class ChatCommandHandler
             menu.AddMenuOption("Admin Commands", (p, opt) => ShowAdminCommands(p));
         }
 
-        MenuManager.OpenCenterHtmlMenu(_plugin, player, menu);
+        MenuManager.OpenChatMenu(player, menu);
         return true;
     }
 
     private void ShowVoteCommands(CCSPlayerController player)
     {
-        var menu = new CenterHtmlMenu("Vote Commands", _plugin);
+        var menu = new ChatMenu("Vote Commands");
 
         menu.AddMenuOption("!votekick <player> - Vote to kick", (p, o) => {}, true);
         menu.AddMenuOption("!votepause - Vote to pause", (p, o) => {}, true);
@@ -859,12 +859,12 @@ public class ChatCommandHandler
         menu.AddMenuOption("!stay / !switch - Knife round choice", (p, o) => {}, true);
         menu.AddMenuOption("« Back", (p, o) => HandleHelp(p));
 
-        MenuManager.OpenCenterHtmlMenu(_plugin, player, menu);
+        MenuManager.OpenChatMenu(player, menu);
     }
 
     private void ShowAdminCommands(CCSPlayerController player)
     {
-        var menu = new CenterHtmlMenu("Admin Commands", _plugin);
+        var menu = new ChatMenu("Admin Commands");
 
         if (AdminManager.PlayerHasPermissions(player, "@css/kick"))
             menu.AddMenuOption("!kick <player> [reason]", (p, o) => {}, true);
@@ -890,7 +890,7 @@ public class ChatCommandHandler
         }
 
         menu.AddMenuOption("« Back", (p, o) => HandleHelp(p));
-        MenuManager.OpenCenterHtmlMenu(_plugin, player, menu);
+        MenuManager.OpenChatMenu(player, menu);
     }
 
     #endregion

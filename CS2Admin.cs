@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "0.2.0";
+    public override string ModuleVersion => "0.3.0";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
@@ -60,6 +60,12 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
             Server.PrintToChatAll($"{Config.ChatPrefix} {Config.WarmupMessage}");
         }
 
+        // Configure GOTV if enabled
+        if (Config.EnableGOTV)
+        {
+            ConfigureGOTV();
+        }
+
         Logger.LogInformation("CS2Admin loaded successfully!");
     }
 
@@ -69,6 +75,22 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
         _services = null;
 
         Logger.LogInformation("CS2Admin unloaded.");
+    }
+
+    private void ConfigureGOTV()
+    {
+        Server.ExecuteCommand($"tv_enable 1");
+        Server.ExecuteCommand($"tv_port {Config.GOTVPort}");
+        Server.ExecuteCommand($"tv_maxclients {Config.GOTVMaxClients}");
+        Server.ExecuteCommand($"tv_name \"{Config.GOTVName}\"");
+        Server.ExecuteCommand($"tv_delay {Config.GOTVDelay}");
+
+        if (Config.GOTVAutoRecord)
+        {
+            Server.ExecuteCommand("tv_autorecord 1");
+        }
+
+        Logger.LogInformation($"GOTV configured on port {Config.GOTVPort} with {Config.GOTVMaxClients} max clients");
     }
 
     private void OnMapStart(string mapName)
@@ -134,7 +156,13 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 
         if (_services.MatchService.IsWarmup)
         {
-            _services.MatchService.GiveMoneyToPlayer(player);
+            AddTimer(0.1f, () =>
+            {
+                if (player.IsValid && player.PawnIsAlive)
+                {
+                    _services.MatchService.GiveMoneyToPlayer(player);
+                }
+            });
         }
 
         // Strip weapons during knife only mode

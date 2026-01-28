@@ -73,4 +73,23 @@ public class PluginConfig : BasePluginConfig
 
     [JsonPropertyName("KnifeRoundWinnerMessage")]
     public string KnifeRoundWinnerMessage { get; set; } = "{team} won the knife round! Type !stay or !switch to choose side.";
+
+    // GOTV Settings
+    [JsonPropertyName("EnableGOTV")]
+    public bool EnableGOTV { get; set; } = false;
+
+    [JsonPropertyName("GOTVPort")]
+    public int GOTVPort { get; set; } = 27020;
+
+    [JsonPropertyName("GOTVMaxClients")]
+    public int GOTVMaxClients { get; set; } = 10;
+
+    [JsonPropertyName("GOTVName")]
+    public string GOTVName { get; set; } = "CS2Admin GOTV";
+
+    [JsonPropertyName("GOTVDelay")]
+    public int GOTVDelay { get; set; } = 30;
+
+    [JsonPropertyName("GOTVAutoRecord")]
+    public bool GOTVAutoRecord { get; set; } = false;
 }
