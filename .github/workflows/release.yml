@@ -29,6 +29,8 @@ jobs:
     name: Build Release
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write    # Required for creating releases
 
     steps:
       - name: Checkout code
