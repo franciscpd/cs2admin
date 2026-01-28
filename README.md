@@ -6,22 +6,78 @@ A comprehensive server administration plugin for Counter-Strike 2, built with Co
 
 - **Admin Commands**: Kick, ban, mute, slay, slap, respawn players
 - **Match Control**: Pause, unpause, restart matches, change maps
+- **Warmup Mode**: Automatic warmup with unlimited money until admin starts match
 - **Vote System**: Public voting for kick, pause, restart, and map changes
 - **Admin Management**: Add/remove admins and groups via chat or console
-- **Persistent Storage**: SQLite database for bans, mutes, admins, and groups
+- **Welcome Messages**: Customizable welcome and join announcements
+- **Persistent Storage**: SQLite database for bans, mutes, admins, and logs
 - **Chat Commands**: Both `.command` and console `css_command` syntax supported
 
 ## Requirements
 
 - Counter-Strike 2 Dedicated Server
 - [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) v1.0.305+
-- .NET 8.0 Runtime
+- [Metamod:Source](https://www.sourcemm.net/) 2.x
 
 ## Installation
 
-1. Build the plugin: `dotnet build -c Release`
-2. Copy the `bin/Release/net8.0/` contents to your server's `addons/counterstrikesharp/plugins/CS2Admin/` folder
-3. Restart the server or use `css_plugins load CS2Admin`
+### Option 1: Download Release (Recommended)
+
+1. Download the latest release from [GitHub Releases](https://github.com/YOUR_USERNAME/cs2admin/releases)
+2. Extract the ZIP file
+3. Copy all files to your server's `addons/counterstrikesharp/plugins/CS2Admin/` folder
+4. Restart the server
+
+### Option 2: Build from Source
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/cs2admin.git
+   cd cs2admin
+   ```
+
+2. Build the plugin:
+   ```bash
+   dotnet build -c Release
+   ```
+
+3. Copy files to your server:
+   ```bash
+   cp -r bin/Release/net8.0/* /path/to/server/addons/counterstrikesharp/plugins/CS2Admin/
+   ```
+
+4. Restart the server or load the plugin:
+   ```
+   css_plugins load CS2Admin
+   ```
+
+### Verify Installation
+
+After installation, you should see in the server console:
+```
+[CS2Admin] CS2Admin loaded successfully!
+```
+
+The plugin will automatically create:
+- `plugins/CS2Admin/data/cs2admin.db` - SQLite database
+- `configs/plugins/CS2Admin/CS2Admin.json` - Configuration file
+
+### First Admin Setup
+
+To set up your first admin, edit `addons/counterstrikesharp/configs/admins.json`:
+
+```json
+{
+  "YOUR_STEAM_ID_64": {
+    "identity": "YOUR_STEAM_ID_64",
+    "flags": ["@css/root"]
+  }
+}
+```
+
+Replace `YOUR_STEAM_ID_64` with your Steam ID (e.g., `76561198012345678`).
+
+After that, you can manage admins in-game using `.add_admin` command.
 
 ## Commands
 
@@ -51,6 +107,14 @@ A comprehensive server administration plugin for Counter-Strike 2, built with Co
 | `.pause` / `.unpause` | @css/generic | Pause/unpause match |
 | `.restart` | @css/generic | Restart match |
 
+### Warmup Commands (`.` prefix)
+
+| Command | Permission | Description |
+|---------|------------|-------------|
+| `.start` | @css/generic | Start match (end warmup) |
+| `.warmup` | @css/generic | Start warmup mode |
+| `.endwarmup` | @css/generic | End warmup without restart |
+
 ### Admin Management Commands (`.` prefix)
 
 | Command | Permission | Description |
@@ -67,12 +131,13 @@ A comprehensive server administration plugin for Counter-Strike 2, built with Co
 ### Console Commands (`css_` prefix)
 
 All chat commands are available as console commands with `css_` prefix:
-- `css_kick`, `css_ban`, `css_votekick`, etc.
+- `css_kick`, `css_ban`, `css_votekick`, `css_start`, `css_warmup`, etc.
 
 ## Duration Format
 
 For ban and mute durations:
 - `0` - Permanent
+- `30s` - 30 seconds
 - `30m` - 30 minutes
 - `1h` - 1 hour
 - `1d` - 1 day
@@ -95,7 +160,17 @@ Configuration is stored in `addons/counterstrikesharp/configs/plugins/CS2Admin/C
   "DefaultKickReason": "Kicked by admin",
   "DefaultMuteReason": "Muted by admin",
   "ChatPrefix": "[CS2Admin]",
-  "EnableLogging": true
+  "EnableLogging": true,
+  "EnableWelcomeMessage": true,
+  "WelcomeMessage": "Welcome to the server, {player}!",
+  "WelcomeMessageDelay": 3.0,
+  "AnnouncePlayerJoin": true,
+  "PlayerJoinMessage": "{player} joined the server.",
+  "EnableWarmupMode": true,
+  "WarmupMoney": 60000,
+  "WarmupMessage": "Server is in warmup. Waiting for admin to start the match.",
+  "MatchStartMessage": "Match starting! Good luck, have fun!",
+  "MinPlayersToStart": 2
 }
 ```
 
@@ -103,13 +178,47 @@ Configuration is stored in `addons/counterstrikesharp/configs/plugins/CS2Admin/C
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `DatabasePath` | `data/cs2admin.db` | SQLite database path (relative to plugin folder) |
-| `VoteThresholdPercent` | `60` | Percentage of yes votes needed to pass |
+| `DatabasePath` | `data/cs2admin.db` | SQLite database path |
+| `VoteThresholdPercent` | `60` | Percentage of yes votes needed |
 | `VoteDurationSeconds` | `30` | How long votes last |
 | `VoteCooldownSeconds` | `60` | Cooldown between same vote types |
 | `MinimumVotersRequired` | `3` | Minimum players to start a vote |
 | `ChatPrefix` | `[CS2Admin]` | Prefix for chat messages |
 | `EnableLogging` | `true` | Log admin actions to database |
+
+### Welcome Message Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `EnableWelcomeMessage` | `true` | Show welcome message to joining players |
+| `WelcomeMessage` | `Welcome to the server, {player}!` | Message shown to player |
+| `WelcomeMessageDelay` | `3.0` | Delay in seconds before showing |
+| `AnnouncePlayerJoin` | `true` | Announce joins to all players |
+| `PlayerJoinMessage` | `{player} joined the server.` | Join announcement |
+
+**Available variables:** `{player}`, `{steamid}`
+
+### Warmup Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `EnableWarmupMode` | `true` | Enable automatic warmup on map load |
+| `WarmupMoney` | `60000` | Money during warmup |
+| `WarmupMessage` | `Server is in warmup...` | Message shown during warmup |
+| `MatchStartMessage` | `Match starting!...` | Message when match starts |
+| `MinPlayersToStart` | `2` | Minimum players to start match |
+
+## Warmup Mode
+
+When enabled, the server automatically enters warmup mode on map load:
+
+- Unlimited money ($60,000 by default)
+- Automatic respawn on death
+- Buy anywhere on the map
+- Free armor
+- Infinite buy time
+
+Use `.start` to begin the match when ready.
 
 ## Player Targeting
 
@@ -127,13 +236,13 @@ The plugin stores data in SQLite at `plugins/CS2Admin/data/cs2admin.db`:
 - `admin_groups` - Admin groups with permissions
 - `logs` - Admin action logs (when enabled)
 
+The database is created automatically on first run.
+
 ## Admin Permissions
 
-Admins can be managed in two ways:
+### Managing Admins In-Game
 
-### 1. In-Game (Recommended)
-
-Use chat or console commands to manage admins dynamically:
+Use chat or console commands to manage admins:
 
 ```
 .add_admin 76561198012345678 @css/kick,@css/ban,@css/slay
@@ -141,7 +250,7 @@ Use chat or console commands to manage admins dynamically:
 .set_group 76561198012345678 moderator
 ```
 
-### 2. CounterStrikeSharp Config File
+### Using Config File
 
 Configure in `addons/counterstrikesharp/configs/admins.json`:
 
@@ -149,7 +258,7 @@ Configure in `addons/counterstrikesharp/configs/admins.json`:
 {
   "76561198012345678": {
     "identity": "76561198012345678",
-    "flags": ["@css/kick", "@css/ban", "@css/slay", "@css/chat", "@css/changemap", "@css/generic"]
+    "flags": ["@css/root"]
   }
 }
 ```
@@ -164,9 +273,25 @@ Configure in `addons/counterstrikesharp/configs/admins.json`:
 | `@css/slay` | Slay, slap, respawn players |
 | `@css/chat` | Mute/unmute players |
 | `@css/changemap` | Change maps |
-| `@css/generic` | Pause, unpause, restart match |
+| `@css/generic` | Pause, unpause, restart, warmup control |
 | `@css/vip` | VIP flag |
 | `@css/reservation` | Reserved slot |
+
+## Troubleshooting
+
+### Plugin not loading
+- Verify CounterStrikeSharp is installed correctly
+- Check server console for error messages
+- Ensure all DLL files are in the plugin folder
+
+### Commands not working
+- Verify you have the required permissions
+- Check if the command prefix is correct (`.` for chat, `css_` for console)
+- Ensure the player name/SteamID is valid
+
+### Database errors
+- The `data/` folder is created automatically
+- Ensure the server has write permissions to the plugin folder
 
 ## License
 
