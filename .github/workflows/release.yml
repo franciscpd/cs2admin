@@ -72,8 +72,9 @@ jobs:
 
       - name: Create release artifact
         run: |
-          cd publish
-          zip -r ../CS2Admin-${{ steps.get_version.outputs.VERSION }}.zip .
+          mkdir -p CS2Admin
+          cp -r publish/* CS2Admin/
+          zip -r CS2Admin-${{ steps.get_version.outputs.VERSION }}.zip CS2Admin
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
