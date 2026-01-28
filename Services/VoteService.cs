@@ -76,7 +76,7 @@ public class VoteService
 
         var voteDescription = GetVoteDescription(_currentVote);
         _broadcastMessage($"Vote started: {voteDescription}");
-        _broadcastMessage($"Type .yes or .no to vote. ({_voteDurationSeconds} seconds remaining)");
+        _broadcastMessage($"Type !yes or !no to vote. ({_voteDurationSeconds} seconds remaining)");
 
         // Start timer for vote expiration
         _voteTimer = new CounterStrikeSharp.API.Modules.Timers.Timer(_voteDurationSeconds, () =>
