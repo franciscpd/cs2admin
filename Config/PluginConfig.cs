@@ -1,0 +1,67 @@
+using CounterStrikeSharp.API.Core;
+using System.Text.Json.Serialization;
+
+namespace CS2Admin.Config;
+
+public class PluginConfig : BasePluginConfig
+{
+    [JsonPropertyName("DatabasePath")]
+    public string DatabasePath { get; set; } = "data/cs2admin.db";
+
+    [JsonPropertyName("VoteThresholdPercent")]
+    public int VoteThresholdPercent { get; set; } = 60;
+
+    [JsonPropertyName("VoteDurationSeconds")]
+    public int VoteDurationSeconds { get; set; } = 30;
+
+    [JsonPropertyName("VoteCooldownSeconds")]
+    public int VoteCooldownSeconds { get; set; } = 60;
+
+    [JsonPropertyName("MinimumVotersRequired")]
+    public int MinimumVotersRequired { get; set; } = 3;
+
+    [JsonPropertyName("DefaultBanReason")]
+    public string DefaultBanReason { get; set; } = "Banned by admin";
+
+    [JsonPropertyName("DefaultKickReason")]
+    public string DefaultKickReason { get; set; } = "Kicked by admin";
+
+    [JsonPropertyName("DefaultMuteReason")]
+    public string DefaultMuteReason { get; set; } = "Muted by admin";
+
+    [JsonPropertyName("ChatPrefix")]
+    public string ChatPrefix { get; set; } = "[CS2Admin]";
+
+    [JsonPropertyName("EnableLogging")]
+    public bool EnableLogging { get; set; } = true;
+
+    [JsonPropertyName("EnableWelcomeMessage")]
+    public bool EnableWelcomeMessage { get; set; } = true;
+
+    [JsonPropertyName("WelcomeMessage")]
+    public string WelcomeMessage { get; set; } = "Welcome to the server, {player}!";
+
+    [JsonPropertyName("WelcomeMessageDelay")]
+    public float WelcomeMessageDelay { get; set; } = 3.0f;
+
+    [JsonPropertyName("AnnouncePlayerJoin")]
+    public bool AnnouncePlayerJoin { get; set; } = true;
+
+    [JsonPropertyName("PlayerJoinMessage")]
+    public string PlayerJoinMessage { get; set; } = "{player} joined the server.";
+
+    [JsonPropertyName("EnableWarmupMode")]
+    public bool EnableWarmupMode { get; set; } = true;
+
+    [JsonPropertyName("WarmupMoney")]
+    public int WarmupMoney { get; set; } = 60000;
+
+    [JsonPropertyName("WarmupMessage")]
+    public string WarmupMessage { get; set; } = "Server is in warmup. Waiting for admin to start the match.";
+
+    [JsonPropertyName("MatchStartMessage")]
+    public string MatchStartMessage { get; set; } = "Match starting! Good luck, have fun!";
+
+    [JsonPropertyName("MinPlayersToStart")]
+    public int MinPlayersToStart { get; set; } = 2;
+}

@@ -1,0 +1,45 @@
+# Build results
+bin/
+obj/
+out/
+
+# NuGet
+*.nupkg
+.nuget/
+packages/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Visual Studio Code
+.vscode/
+
+# Build artifacts
+*.dll
+*.pdb
+*.exe
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# SQLite database files (runtime data)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Plugin data folder (created at runtime)
+data/
+
+# Logs
+*.log
+logs/
