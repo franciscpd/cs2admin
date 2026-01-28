@@ -20,6 +20,20 @@ public class ChatCommandHandler
     private readonly MatchService _matchService;
     private readonly VoteService _voteService;
     private readonly AdminManagementCommands _adminManagementCommands;
+    private readonly AdminService _adminService;
+
+    private static readonly string[] AvailableFlags =
+    [
+        "@css/kick",
+        "@css/ban",
+        "@css/slay",
+        "@css/chat",
+        "@css/changemap",
+        "@css/generic",
+        "@css/root",
+        "@css/vip",
+        "@css/reservation"
+    ];
 
     public ChatCommandHandler(
         BasePlugin plugin,
@@ -29,7 +43,8 @@ public class ChatCommandHandler
         MuteService muteService,
         MatchService matchService,
         VoteService voteService,
-        AdminManagementCommands adminManagementCommands)
+        AdminManagementCommands adminManagementCommands,
+        AdminService adminService)
     {
         _plugin = plugin;
         _config = config;
@@ -39,6 +54,7 @@ public class ChatCommandHandler
         _matchService = matchService;
         _voteService = voteService;
         _adminManagementCommands = adminManagementCommands;
+        _adminService = adminService;
     }
 
     public HookResult OnPlayerChat(CCSPlayerController? player, CommandInfo info)
@@ -837,10 +853,16 @@ public class ChatCommandHandler
         var hasSlay = AdminManager.PlayerHasPermissions(player, "@css/slay");
         var hasMap = AdminManager.PlayerHasPermissions(player, "@css/changemap");
         var hasGeneric = AdminManager.PlayerHasPermissions(player, "@css/generic");
+        var hasRoot = AdminManager.PlayerHasPermissions(player, "@css/root");
 
         if (hasKick || hasBan || hasChat || hasSlay || hasMap || hasGeneric)
         {
             menu.AddMenuOption("Admin Commands", (p, opt) => ShowAdminCommands(p));
+        }
+
+        if (hasRoot)
+        {
+            menu.AddMenuOption("Root Admin Commands", (p, opt) => ShowRootAdminCommands(p));
         }
 
         MenuManager.OpenChatMenu(player, menu);
@@ -891,6 +913,220 @@ public class ChatCommandHandler
 
         menu.AddMenuOption("« Back", (p, o) => HandleHelp(p));
         MenuManager.OpenChatMenu(player, menu);
+    }
+
+    private void ShowRootAdminCommands(CCSPlayerController player)
+    {
+        var menu = new ChatMenu("Root Admin Commands");
+
+        menu.AddMenuOption("Add Admin", (p, o) => ShowAddAdminMenu(p));
+        menu.AddMenuOption("Remove Admin", (p, o) => ShowRemoveAdminMenu(p));
+        menu.AddMenuOption("List Admins", (p, o) => { _adminManagementCommands.HandleListAdmins(p); });
+        menu.AddMenuOption("Add Group", (p, o) => ShowAddGroupMenu(p));
+        menu.AddMenuOption("Remove Group", (p, o) => ShowRemoveGroupMenu(p));
+        menu.AddMenuOption("List Groups", (p, o) => { _adminManagementCommands.HandleListGroups(p); });
+        menu.AddMenuOption("Set Admin Group", (p, o) => ShowSetGroupMenu(p));
+        menu.AddMenuOption("Reload Admins", (p, o) => { _adminManagementCommands.HandleReloadAdmins(p); });
+        menu.AddMenuOption("« Back", (p, o) => HandleHelp(p));
+
+        MenuManager.OpenChatMenu(player, menu);
+    }
+
+    private void ShowAddAdminMenu(CCSPlayerController admin)
+    {
+        var players = GetSelectablePlayers();
+
+        if (players.Count == 0)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} No players available.");
+            return;
+        }
+
+        var menu = new ChatMenu("Add Admin - Select Player");
+
+        foreach (var target in players)
+        {
+            menu.AddMenuOption(target.PlayerName, (p, o) => ShowFlagSelectionMenu(p, target));
+        }
+
+        menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
+        MenuManager.OpenChatMenu(admin, menu);
+    }
+
+    private void ShowFlagSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
+    {
+        var menu = new ChatMenu($"Flags for {target.PlayerName}");
+
+        menu.AddMenuOption("Full Admin (@css/root)", (p, o) => ExecuteAddAdmin(p, target, "@css/root"));
+        menu.AddMenuOption("Moderator (kick,ban,chat)", (p, o) => ExecuteAddAdmin(p, target, "@css/kick,@css/ban,@css/chat"));
+        menu.AddMenuOption("Basic Admin (kick,slay)", (p, o) => ExecuteAddAdmin(p, target, "@css/kick,@css/slay"));
+        menu.AddMenuOption("Match Admin (generic,map)", (p, o) => ExecuteAddAdmin(p, target, "@css/generic,@css/changemap"));
+        menu.AddMenuOption("VIP", (p, o) => ExecuteAddAdmin(p, target, "@css/vip,@css/reservation"));
+        menu.AddMenuOption("« Back", (p, o) => ShowAddAdminMenu(p));
+
+        MenuManager.OpenChatMenu(admin, menu);
+    }
+
+    private void ExecuteAddAdmin(CCSPlayerController admin, CCSPlayerController target, string flags)
+    {
+        if (_adminService.AddAdmin(target.SteamID, target.PlayerName, flags, admin.SteamID, admin.PlayerName))
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} Admin added: {target.PlayerName}");
+            Server.PrintToChatAll($"{_config.ChatPrefix} {target.PlayerName} is now an admin.");
+        }
+        else
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} Admin already exists.");
+        }
+    }
+
+    private void ShowRemoveAdminMenu(CCSPlayerController admin)
+    {
+        var admins = _adminService.GetAllAdmins();
+
+        if (admins.Count == 0)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} No admins found.");
+            return;
+        }
+
+        var menu = new ChatMenu("Remove Admin - Select");
+
+        foreach (var targetAdmin in admins.Take(7))
+        {
+            menu.AddMenuOption($"{targetAdmin.PlayerName}", (p, o) =>
+            {
+                if (_adminService.RemoveAdmin(targetAdmin.SteamId, p.SteamID, p.PlayerName))
+                {
+                    p.PrintToChat($"{_config.ChatPrefix} Admin removed: {targetAdmin.PlayerName}");
+                }
+                else
+                {
+                    p.PrintToChat($"{_config.ChatPrefix} Failed to remove admin.");
+                }
+            });
+        }
+
+        if (admins.Count > 7)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} Showing first 7 admins. Use !remove_admin <steamid> for others.");
+        }
+
+        menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
+        MenuManager.OpenChatMenu(admin, menu);
+    }
+
+    private void ShowAddGroupMenu(CCSPlayerController admin)
+    {
+        var menu = new ChatMenu("Add Group - Presets");
+
+        menu.AddMenuOption("Moderator", (p, o) => ExecuteAddGroup(p, "moderator", "@css/kick,@css/ban,@css/chat,@css/slay", 50));
+        menu.AddMenuOption("Admin", (p, o) => ExecuteAddGroup(p, "admin", "@css/kick,@css/ban,@css/chat,@css/slay,@css/changemap,@css/generic", 75));
+        menu.AddMenuOption("Super Admin", (p, o) => ExecuteAddGroup(p, "superadmin", "@css/root", 100));
+        menu.AddMenuOption("VIP", (p, o) => ExecuteAddGroup(p, "vip", "@css/vip,@css/reservation", 0));
+        menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
+
+        MenuManager.OpenChatMenu(admin, menu);
+    }
+
+    private void ExecuteAddGroup(CCSPlayerController admin, string name, string flags, int immunity)
+    {
+        if (_adminService.AddGroup(name, flags, immunity, admin.SteamID, admin.PlayerName))
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} Group created: {name}");
+        }
+        else
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} Group already exists.");
+        }
+    }
+
+    private void ShowRemoveGroupMenu(CCSPlayerController admin)
+    {
+        var groups = _adminService.GetAllGroups();
+
+        if (groups.Count == 0)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} No groups found.");
+            return;
+        }
+
+        var menu = new ChatMenu("Remove Group - Select");
+
+        foreach (var group in groups)
+        {
+            menu.AddMenuOption(group.Name, (p, o) =>
+            {
+                if (_adminService.RemoveGroup(group.Name, p.SteamID, p.PlayerName))
+                {
+                    p.PrintToChat($"{_config.ChatPrefix} Group removed: {group.Name}");
+                }
+                else
+                {
+                    p.PrintToChat($"{_config.ChatPrefix} Failed to remove group.");
+                }
+            });
+        }
+
+        menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
+        MenuManager.OpenChatMenu(admin, menu);
+    }
+
+    private void ShowSetGroupMenu(CCSPlayerController admin)
+    {
+        var admins = _adminService.GetAllAdmins();
+
+        if (admins.Count == 0)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} No admins found.");
+            return;
+        }
+
+        var menu = new ChatMenu("Set Group - Select Admin");
+
+        foreach (var targetAdmin in admins.Take(7))
+        {
+            menu.AddMenuOption($"{targetAdmin.PlayerName}", (p, o) => ShowGroupSelectionForAdmin(p, targetAdmin.SteamId, targetAdmin.PlayerName));
+        }
+
+        if (admins.Count > 7)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} Showing first 7 admins. Use !set_group <steamid> <group> for others.");
+        }
+
+        menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
+        MenuManager.OpenChatMenu(admin, menu);
+    }
+
+    private void ShowGroupSelectionForAdmin(CCSPlayerController admin, ulong targetSteamId, string targetName)
+    {
+        var groups = _adminService.GetAllGroups();
+
+        if (groups.Count == 0)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} No groups found. Create a group first.");
+            return;
+        }
+
+        var menu = new ChatMenu($"Group for {targetName}");
+
+        foreach (var group in groups)
+        {
+            menu.AddMenuOption(group.Name, (p, o) =>
+            {
+                if (_adminService.SetAdminGroup(targetSteamId, group.Name, p.SteamID, p.PlayerName))
+                {
+                    p.PrintToChat($"{_config.ChatPrefix} {targetName} assigned to group: {group.Name}");
+                }
+                else
+                {
+                    p.PrintToChat($"{_config.ChatPrefix} Failed to set group.");
+                }
+            });
+        }
+
+        menu.AddMenuOption("« Back", (p, o) => ShowSetGroupMenu(p));
+        MenuManager.OpenChatMenu(admin, menu);
     }
 
     #endregion
