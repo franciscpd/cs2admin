@@ -209,13 +209,14 @@ public class MatchService
         _waitingForSideChoice = false;
         _knifeRoundWinnerTeam = 0;
 
-        // Knife round settings - weapons will be stripped on spawn/purchase
+        // Knife round settings - disable buy menu completely
         Server.ExecuteCommand("mp_respawn_on_death_ct 0");
         Server.ExecuteCommand("mp_respawn_on_death_t 0");
         Server.ExecuteCommand("mp_free_armor 1");
         Server.ExecuteCommand("mp_give_player_c4 0");
         Server.ExecuteCommand("mp_ct_default_secondary \"\"");
         Server.ExecuteCommand("mp_t_default_secondary \"\"");
+        Server.ExecuteCommand("mp_buytime 0");
         Server.ExecuteCommand("mp_restartgame 1");
 
         if (_enableLogging && _database != null && admin != null)
@@ -246,7 +247,7 @@ public class MatchService
         Server.ExecuteCommand("mp_give_player_c4 1");
         Server.ExecuteCommand("mp_ct_default_secondary \"weapon_hkp2000\"");
         Server.ExecuteCommand("mp_t_default_secondary \"weapon_glock\"");
-        Server.ExecuteCommand("mp_buy_allow_guns 255");
+        Server.ExecuteCommand("mp_buytime 20");
 
         if (!stayOnSide)
         {
@@ -268,12 +269,15 @@ public class MatchService
     {
         _isKnifeOnly = true;
 
+        // Knife only settings - disable buy menu completely
         Server.ExecuteCommand("mp_ct_default_secondary \"\"");
         Server.ExecuteCommand("mp_t_default_secondary \"\"");
         Server.ExecuteCommand("mp_give_player_c4 0");
+        Server.ExecuteCommand("mp_free_armor 1");
+        Server.ExecuteCommand("mp_buytime 0");
 
-        // Strip weapons from all players
-        StripAllPlayersWeapons();
+        // Restart round to apply settings cleanly
+        Server.ExecuteCommand("mp_restartgame 1");
 
         if (_enableLogging && _database != null && admin != null)
         {
@@ -285,9 +289,15 @@ public class MatchService
     {
         _isKnifeOnly = false;
 
+        // Restore normal settings
         Server.ExecuteCommand("mp_ct_default_secondary \"weapon_hkp2000\"");
         Server.ExecuteCommand("mp_t_default_secondary \"weapon_glock\"");
         Server.ExecuteCommand("mp_give_player_c4 1");
+        Server.ExecuteCommand("mp_free_armor 0");
+        Server.ExecuteCommand("mp_buytime 20");
+
+        // Restart round to apply settings
+        Server.ExecuteCommand("mp_restartgame 1");
 
         if (_enableLogging && _database != null && admin != null)
         {
@@ -314,15 +324,26 @@ public class MatchService
         var pawn = player.PlayerPawn.Value;
         if (pawn.WeaponServices?.MyWeapons == null) return;
 
+        // Collect weapon names to remove first to avoid modifying collection while iterating
+        var weaponsToRemove = new List<string>();
+
         foreach (var weapon in pawn.WeaponServices.MyWeapons)
         {
             if (weapon.Value == null) continue;
 
-            var weaponData = weapon.Value.DesignerName;
-            if (weaponData != null && !weaponData.Contains("knife") && !weaponData.Contains("bayonet"))
+            var weaponName = weapon.Value.DesignerName;
+            if (!string.IsNullOrEmpty(weaponName) &&
+                !weaponName.Contains("knife") &&
+                !weaponName.Contains("bayonet"))
             {
-                weapon.Value.Remove();
+                weaponsToRemove.Add(weaponName);
             }
+        }
+
+        // Remove collected weapons using safe method
+        foreach (var weaponName in weaponsToRemove)
+        {
+            player.RemoveItemByDesignerName(weaponName);
         }
     }
 

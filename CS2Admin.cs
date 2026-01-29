@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "0.6.2";
+    public override string ModuleVersion => "0.6.3";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
@@ -53,7 +53,6 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
         {
             RegisterEventHandler<EventRoundStart>(OnRoundStart);
             RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
-            RegisterEventHandler<EventItemPurchase>(OnItemPurchase);
         }
 
         // Load admins from database
@@ -185,6 +184,7 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
         if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
             return HookResult.Continue;
 
+        // Give warmup money on spawn
         if (_services.MatchService.IsWarmup)
         {
             AddTimer(0.1f, () =>
@@ -192,42 +192,6 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
                 if (player.IsValid && player.PawnIsAlive)
                 {
                     _services.MatchService.GiveMoneyToPlayer(player);
-                }
-            });
-        }
-
-        // Strip weapons during knife only mode
-        if (_services.MatchService.IsKnifeOnly)
-        {
-            AddTimer(0.1f, () =>
-            {
-                if (player.IsValid && player.PawnIsAlive)
-                {
-                    _services.MatchService.StripPlayerWeapons(player);
-                }
-            });
-        }
-
-        return HookResult.Continue;
-    }
-
-    private HookResult OnItemPurchase(EventItemPurchase @event, GameEventInfo info)
-    {
-        if (_services == null) return HookResult.Continue;
-
-        // During knife only mode, strip weapons after any purchase
-        if (_services.MatchService.IsKnifeOnly)
-        {
-            var player = @event.Userid;
-            if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
-                return HookResult.Continue;
-
-            // Delay slightly to ensure weapon is in inventory before stripping
-            AddTimer(0.1f, () =>
-            {
-                if (player.IsValid && player.PawnIsAlive)
-                {
-                    _services?.MatchService.StripPlayerWeapons(player);
                 }
             });
         }
