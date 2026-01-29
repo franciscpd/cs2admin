@@ -288,6 +288,11 @@ public class MatchService
     {
         _isKnifeOnly = true;
 
+        // Force end warmup if active
+        Server.ExecuteCommand("mp_warmup_pausetimer 0");
+        Server.ExecuteCommand("mp_warmuptime 0");
+        Server.ExecuteCommand("mp_warmup_end");
+
         // Knife only settings - disable buying completely
         Server.ExecuteCommand("mp_ct_default_secondary \"\"");
         Server.ExecuteCommand("mp_t_default_secondary \"\"");
@@ -297,8 +302,17 @@ public class MatchService
         Server.ExecuteCommand("mp_startmoney 0");
         Server.ExecuteCommand("mp_maxmoney 0");
 
-        // Restart round to apply settings cleanly
+        // First restart to apply settings
         Server.ExecuteCommand("mp_restartgame 1");
+
+        // Second restart after delay to ensure settings are applied
+        _plugin?.AddTimer(3.0f, () =>
+        {
+            if (_isKnifeOnly)
+            {
+                Server.ExecuteCommand("mp_restartgame 1");
+            }
+        });
 
         if (_enableLogging && _database != null && admin != null)
         {
