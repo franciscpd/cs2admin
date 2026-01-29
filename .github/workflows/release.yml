@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -70,6 +72,33 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            {
+              echo "CHANGELOG<<EOF"
+              echo "## What's Changed"
+              echo ""
+              git log --pretty=format:"- %s (%h)"
+              echo ""
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          else
+            {
+              echo "CHANGELOG<<EOF"
+              echo "## What's Changed since $PREVIOUS_TAG"
+              echo ""
+              git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD
+              echo ""
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          fi
+
       - name: Create release artifact
         run: |
           mkdir -p CS2Admin
@@ -83,9 +112,20 @@ jobs:
           path: publish/
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: CS2Admin-${{ steps.get_version.outputs.VERSION }}.zip
-          generate_release_notes: true
+          body: |
+            # CS2Admin v${{ steps.get_version.outputs.VERSION }}
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ## Installation
+
+            1. Download `CS2Admin-${{ steps.get_version.outputs.VERSION }}.zip`
+            2. Extract to `addons/counterstrikesharp/plugins/`
+            3. Restart server or use `css_plugins load CS2Admin`
+
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.PREVIOUS_TAG }}...v${{ steps.get_version.outputs.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
