@@ -209,7 +209,7 @@ public class MatchService
         _waitingForSideChoice = false;
         _knifeRoundWinnerTeam = 0;
 
-        // Knife round settings - disable buy menu completely
+        // Knife round settings - disable buying completely
         Server.ExecuteCommand("mp_respawn_on_death_ct 0");
         Server.ExecuteCommand("mp_respawn_on_death_t 0");
         Server.ExecuteCommand("mp_free_armor 1");
@@ -217,6 +217,8 @@ public class MatchService
         Server.ExecuteCommand("mp_ct_default_secondary \"\"");
         Server.ExecuteCommand("mp_t_default_secondary \"\"");
         Server.ExecuteCommand("mp_buytime 0");
+        Server.ExecuteCommand("mp_startmoney 0");
+        Server.ExecuteCommand("mp_maxmoney 0");
         Server.ExecuteCommand("mp_restartgame 1");
 
         if (_enableLogging && _database != null && admin != null)
@@ -248,6 +250,8 @@ public class MatchService
         Server.ExecuteCommand("mp_ct_default_secondary \"weapon_hkp2000\"");
         Server.ExecuteCommand("mp_t_default_secondary \"weapon_glock\"");
         Server.ExecuteCommand("mp_buytime 20");
+        Server.ExecuteCommand("mp_startmoney 800");
+        Server.ExecuteCommand("mp_maxmoney 16000");
 
         if (!stayOnSide)
         {
@@ -269,12 +273,14 @@ public class MatchService
     {
         _isKnifeOnly = true;
 
-        // Knife only settings - disable buy menu completely
+        // Knife only settings - disable buying completely
         Server.ExecuteCommand("mp_ct_default_secondary \"\"");
         Server.ExecuteCommand("mp_t_default_secondary \"\"");
         Server.ExecuteCommand("mp_give_player_c4 0");
         Server.ExecuteCommand("mp_free_armor 1");
         Server.ExecuteCommand("mp_buytime 0");
+        Server.ExecuteCommand("mp_startmoney 0");
+        Server.ExecuteCommand("mp_maxmoney 0");
 
         // Restart round to apply settings cleanly
         Server.ExecuteCommand("mp_restartgame 1");
@@ -295,6 +301,8 @@ public class MatchService
         Server.ExecuteCommand("mp_give_player_c4 1");
         Server.ExecuteCommand("mp_free_armor 0");
         Server.ExecuteCommand("mp_buytime 20");
+        Server.ExecuteCommand("mp_startmoney 800");
+        Server.ExecuteCommand("mp_maxmoney 16000");
 
         // Restart round to apply settings
         Server.ExecuteCommand("mp_restartgame 1");
