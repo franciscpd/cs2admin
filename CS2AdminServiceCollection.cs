@@ -40,6 +40,7 @@ public class CS2AdminServiceCollection : IDisposable
         MuteService = new MuteService(Database, config.EnableLogging);
         PlayerService = new PlayerService(Database, config.EnableLogging);
         MatchService = new MatchService(Database, config.EnableLogging, config.WarmupMoney);
+        MatchService.SetPlugin(plugin);
 
         VoteService = new VoteService(
             plugin,

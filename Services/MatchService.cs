@@ -8,13 +8,14 @@ public class MatchService
 {
     private readonly DatabaseService? _database;
     private readonly bool _enableLogging;
+    private readonly int _warmupMoney;
+    private BasePlugin? _plugin;
     private bool _isPaused;
     private bool _isWarmup;
     private bool _isKnifeRound;
     private bool _isKnifeOnly;
     private int _knifeRoundWinnerTeam; // 2 = T, 3 = CT
     private bool _waitingForSideChoice;
-    private int _warmupMoney;
 
     public bool IsPaused => _isPaused;
     public bool IsWarmup => _isWarmup;
@@ -28,6 +29,11 @@ public class MatchService
         _database = database;
         _enableLogging = enableLogging;
         _warmupMoney = warmupMoney;
+    }
+
+    public void SetPlugin(BasePlugin plugin)
+    {
+        _plugin = plugin;
     }
 
     public void StartWarmup(CCSPlayerController? admin = null)
@@ -217,7 +223,18 @@ public class MatchService
         Server.ExecuteCommand("mp_buytime 0");
         Server.ExecuteCommand("mp_startmoney 0");
         Server.ExecuteCommand("mp_maxmoney 0");
-        Server.ExecuteCommand("mp_restartgame 3");
+
+        // First restart to end warmup
+        Server.ExecuteCommand("mp_restartgame 1");
+
+        // Second restart after delay to ensure settings are applied
+        _plugin?.AddTimer(3.0f, () =>
+        {
+            if (_isKnifeRound)
+            {
+                Server.ExecuteCommand("mp_restartgame 1");
+            }
+        });
 
         if (_enableLogging && _database != null && admin != null)
         {
