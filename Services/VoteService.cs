@@ -21,6 +21,7 @@ public class VoteService
 
     public Vote? CurrentVote => _currentVote;
     public bool HasActiveVote => _currentVote?.IsActive == true;
+    public CPanoramaVote PanoramaVote => _panoramaVote;
 
     public VoteService(
         BasePlugin plugin,
@@ -38,6 +39,14 @@ public class VoteService
         _broadcastMessage = broadcastMessage;
         _onVotePassed = onVotePassed;
         _panoramaVote = new CPanoramaVote(plugin);
+    }
+
+    /// <summary>
+    /// Initialize the vote controller. Must be called after map start.
+    /// </summary>
+    public void InitVoteController()
+    {
+        _panoramaVote.Init();
     }
 
     public (bool Success, string Message) StartVote(VoteType type, CCSPlayerController initiator, CCSPlayerController? targetPlayer = null, string? targetMap = null)
@@ -113,11 +122,11 @@ public class VoteService
                 if (player != null)
                 {
                     var steamId = player.SteamID;
-                    if (param2 == (int)PanoramaVote.CastVote.VOTE_OPTION1) // Yes
+                    if (param2 == (int)global::PanoramaVote.CastVote.VOTE_OPTION1) // Yes
                     {
                         _currentVote.YesVotes.Add(steamId);
                     }
-                    else if (param2 == (int)PanoramaVote.CastVote.VOTE_OPTION2) // No
+                    else if (param2 == (int)global::PanoramaVote.CastVote.VOTE_OPTION2) // No
                     {
                         _currentVote.NoVotes.Add(steamId);
                     }

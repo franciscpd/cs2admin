@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "0.6.0";
+    public override string ModuleVersion => "0.6.1";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
@@ -42,22 +42,35 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
         RegisterEventHandler<EventPlayerDisconnect>(_services.PlayerConnectionHandler.OnPlayerDisconnect);
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
 
+        // Register map start listener (needed for vote system and warmup)
+        RegisterListener<Listeners.OnMapStart>(OnMapStart);
+
+        // Register vote_cast event for PanoramaVote
+        RegisterEventHandler<EventVoteCast>(OnVoteCast);
+
         // Register map/round events for warmup and knife round
         if (Config.EnableWarmupMode)
         {
             RegisterEventHandler<EventRoundStart>(OnRoundStart);
             RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
-            RegisterListener<Listeners.OnMapStart>(OnMapStart);
         }
 
         // Load admins from database
         _services.AdminService.LoadAdminsToGame();
 
-        // If hot reload, start warmup if enabled
-        if (hotReload && Config.EnableWarmupMode)
+        // If hot reload, initialize vote controller and start warmup if enabled
+        if (hotReload)
         {
-            _services.MatchService.StartWarmup();
-            Server.PrintToChatAll($"{Config.ChatPrefix} {Config.WarmupMessage}");
+            AddTimer(1.0f, () =>
+            {
+                _services?.VoteService.InitVoteController();
+            });
+
+            if (Config.EnableWarmupMode)
+            {
+                _services.MatchService.StartWarmup();
+                Server.PrintToChatAll($"{Config.ChatPrefix} {Config.WarmupMessage}");
+            }
         }
 
         // Configure GOTV if enabled
@@ -97,7 +110,16 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
     {
         _warmupStartedOnMapLoad = false;
 
-        if (_services == null || !Config.EnableWarmupMode) return;
+        if (_services == null) return;
+
+        // Initialize vote controller after map start
+        AddTimer(1.0f, () =>
+        {
+            _services?.VoteService.InitVoteController();
+            Logger.LogInformation("Vote controller initialized.");
+        });
+
+        if (!Config.EnableWarmupMode) return;
 
         // Reset knife round state
         _services.MatchService.ResetKnifeRoundState();
@@ -113,6 +135,14 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
                 Logger.LogInformation($"Warmup started on map: {mapName}");
             }
         });
+    }
+
+    private HookResult OnVoteCast(EventVoteCast @event, GameEventInfo info)
+    {
+        if (_services == null) return HookResult.Continue;
+
+        _services.VoteService.PanoramaVote.VoteCast(@event);
+        return HookResult.Continue;
     }
 
     private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
