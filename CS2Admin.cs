@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "0.6.9";
+    public override string ModuleVersion => "0.6.10";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
@@ -36,6 +36,11 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
         // Register chat command listener for . prefix
         AddCommandListener("say", OnPlayerSay);
         AddCommandListener("say_team", OnPlayerSay);
+
+        // Block purchases during knife mode
+        AddCommandListener("buy", OnBuyCommand, HookMode.Pre);
+        AddCommandListener("autobuy", OnBuyCommand, HookMode.Pre);
+        AddCommandListener("rebuy", OnBuyCommand, HookMode.Pre);
 
         // Register event handlers
         RegisterEventHandler<EventPlayerConnectFull>(_services.PlayerConnectionHandler.OnPlayerConnect);
@@ -196,6 +201,18 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
             });
         }
 
+        // Strip weapons in knife mode
+        if (_services.MatchService.IsKnifeOnly)
+        {
+            AddTimer(0.2f, () =>
+            {
+                if (player.IsValid && player.PawnIsAlive)
+                {
+                    _services.MatchService.StripPlayerWeapons(player);
+                }
+            });
+        }
+
         return HookResult.Continue;
     }
 
@@ -203,5 +220,17 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
     {
         if (_services == null) return HookResult.Continue;
         return _services.ChatCommandHandler.OnPlayerChat(player, info);
+    }
+
+    private HookResult OnBuyCommand(CCSPlayerController? player, CommandInfo command)
+    {
+        if (_services == null) return HookResult.Continue;
+
+        if (_services.MatchService.IsKnifeOnly && player != null && player.IsValid)
+        {
+            player.PrintToChat($"{Config.ChatPrefix} Purchases are disabled in knife mode!");
+            return HookResult.Handled;
+        }
+        return HookResult.Continue;
     }
 }
