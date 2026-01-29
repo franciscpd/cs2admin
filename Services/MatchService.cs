@@ -216,6 +216,7 @@ public class MatchService
         Server.ExecuteCommand("mp_ct_default_secondary \"\"");
         Server.ExecuteCommand("mp_t_default_secondary \"\"");
         Server.ExecuteCommand("mp_buytime 0");
+        Server.ExecuteCommand("mp_buy_during_immunity_time 0");
         Server.ExecuteCommand("mp_startmoney 0");
         Server.ExecuteCommand("mp_maxmoney 0");
 
@@ -260,6 +261,7 @@ public class MatchService
         Server.ExecuteCommand("mp_ct_default_secondary \"weapon_hkp2000\"");
         Server.ExecuteCommand("mp_t_default_secondary \"weapon_glock\"");
         Server.ExecuteCommand("mp_buytime 20");
+        Server.ExecuteCommand("mp_buy_during_immunity_time 1");
         Server.ExecuteCommand("mp_startmoney 800");
         Server.ExecuteCommand("mp_maxmoney 16000");
 
@@ -289,6 +291,7 @@ public class MatchService
         Server.ExecuteCommand("mp_give_player_c4 0");
         Server.ExecuteCommand("mp_free_armor 1");
         Server.ExecuteCommand("mp_buytime 0");
+        Server.ExecuteCommand("mp_buy_during_immunity_time 0");
         Server.ExecuteCommand("mp_startmoney 0");
         Server.ExecuteCommand("mp_maxmoney 0");
 
@@ -320,6 +323,7 @@ public class MatchService
         Server.ExecuteCommand("mp_give_player_c4 1");
         Server.ExecuteCommand("mp_free_armor 0");
         Server.ExecuteCommand("mp_buytime 20");
+        Server.ExecuteCommand("mp_buy_during_immunity_time 1");
         Server.ExecuteCommand("mp_startmoney 800");
         Server.ExecuteCommand("mp_maxmoney 16000");
 
