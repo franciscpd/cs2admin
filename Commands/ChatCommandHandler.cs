@@ -712,7 +712,6 @@ public class ChatCommandHandler
 
         if (_config.EnableKnifeRound)
         {
-            _matchService.EndWarmup(player);
             Server.PrintToChatAll($"{_config.ChatPrefix} {_config.KnifeRoundMessage}");
             Server.PrintToChatAll($"{_config.ChatPrefix} Match started by {player.PlayerName}.");
             _matchService.StartKnifeRound(player);

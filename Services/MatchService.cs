@@ -196,24 +196,26 @@ public class MatchService
 
     public void StartKnifeRound(CCSPlayerController? admin = null)
     {
+        // End warmup first if active
+        if (_isWarmup)
+        {
+            _isWarmup = false;
+            Server.ExecuteCommand("mp_warmup_pausetimer 0");
+            Server.ExecuteCommand("mp_warmup_end");
+        }
+
         _isKnifeRound = true;
         _isKnifeOnly = true;
         _waitingForSideChoice = false;
         _knifeRoundWinnerTeam = 0;
 
-        // Ensure warmup mode is ended before starting knife round
-        Server.ExecuteCommand("mp_warmup_end");
-
-        // Disable warmup respawn settings
+        // Knife round settings - weapons will be stripped on spawn/purchase
         Server.ExecuteCommand("mp_respawn_on_death_ct 0");
         Server.ExecuteCommand("mp_respawn_on_death_t 0");
-
-        // Knife round settings
         Server.ExecuteCommand("mp_free_armor 1");
         Server.ExecuteCommand("mp_give_player_c4 0");
         Server.ExecuteCommand("mp_ct_default_secondary \"\"");
         Server.ExecuteCommand("mp_t_default_secondary \"\"");
-        Server.ExecuteCommand("mp_buy_allow_guns 0");
         Server.ExecuteCommand("mp_restartgame 1");
 
         if (_enableLogging && _database != null && admin != null)
