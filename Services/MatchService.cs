@@ -196,18 +196,16 @@ public class MatchService
 
     public void StartKnifeRound(CCSPlayerController? admin = null)
     {
-        // End warmup first if active
-        if (_isWarmup)
-        {
-            _isWarmup = false;
-            Server.ExecuteCommand("mp_warmup_pausetimer 0");
-            Server.ExecuteCommand("mp_warmup_end");
-        }
-
+        _isWarmup = false;
         _isKnifeRound = true;
         _isKnifeOnly = true;
         _waitingForSideChoice = false;
         _knifeRoundWinnerTeam = 0;
+
+        // Force end warmup completely
+        Server.ExecuteCommand("mp_warmup_pausetimer 0");
+        Server.ExecuteCommand("mp_warmuptime 0");
+        Server.ExecuteCommand("mp_warmup_end");
 
         // Knife round settings - disable buying completely
         Server.ExecuteCommand("mp_respawn_on_death_ct 0");
@@ -219,7 +217,7 @@ public class MatchService
         Server.ExecuteCommand("mp_buytime 0");
         Server.ExecuteCommand("mp_startmoney 0");
         Server.ExecuteCommand("mp_maxmoney 0");
-        Server.ExecuteCommand("mp_restartgame 1");
+        Server.ExecuteCommand("mp_restartgame 3");
 
         if (_enableLogging && _database != null && admin != null)
         {
