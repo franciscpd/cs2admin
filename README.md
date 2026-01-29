@@ -12,13 +12,14 @@ A comprehensive server administration plugin for Counter-Strike 2, built with Co
 - **Welcome Messages**: Customizable welcome and join announcements
 - **Persistent Storage**: SQLite database for bans, mutes, admins, and logs
 - **Chat Commands**: Both `!command` and console `css_command` syntax supported
-- **Interactive Menus**: Player selection menus for admin commands
+- **Interactive WASD Menus**: Intuitive keyboard navigation (W/S/E/A/R) for all menus
 
 ## Requirements
 
 - Counter-Strike 2 Dedicated Server
-- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) v1.0.305+
+- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) v1.0.307+
 - [Metamod:Source](https://www.sourcemm.net/) 2.x
+- [CS2MenuManager](https://github.com/schwarper/CS2MenuManager) (included as dependency)
 
 ## Installation
 
@@ -143,9 +144,20 @@ After that, you can manage admins in-game using `!add_admin` command.
 All chat commands are available as console commands with `css_` prefix:
 - `css_kick`, `css_ban`, `css_votekick`, `css_start`, `css_warmup`, etc.
 
-## Interactive Player Selection
+## Interactive WASD Menus
 
-When you run admin commands without specifying a player, an interactive menu appears:
+When you run admin commands without specifying a player, an interactive menu appears with **keyboard navigation**:
+
+### Menu Controls
+| Key | Action |
+|-----|--------|
+| **W** | Move up |
+| **S** | Move down |
+| **E** | Select option |
+| **A** | Go back |
+| **R** | Exit menu |
+
+### Menu Types
 
 1. **Simple commands** (`!kick`, `!slay`, `!respawn`, `!unmute`, `!votekick`):
    - Shows a list of players to select
@@ -162,11 +174,10 @@ When you run admin commands without specifying a player, an interactive menu app
 ```
 Player types: !kick
 Menu appears: "Kick - Select Player"
-   1. PlayerOne
-   2. PlayerTwo
-   3. PlayerThree
-Player selects option 2
-PlayerTwo is kicked
+   > PlayerOne      <- Use W/S to navigate
+     PlayerTwo
+     PlayerThree
+Press E to select, R to exit
 ```
 
 ## Duration Format
