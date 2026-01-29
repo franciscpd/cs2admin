@@ -88,11 +88,12 @@ After that, you can manage admins in-game using `!add_admin` command.
 | Command | Description |
 |---------|-------------|
 | `!help` | Show interactive help menu |
-| `!votekick [player]` | Start vote to kick player (shows menu if no player specified) |
+| `!votekick [player]` | Start vote to kick player (uses native CS2 vote UI) |
 | `!votepause` | Start vote to pause match |
 | `!voterestart` | Start vote to restart match |
 | `!votemap <map>` | Start vote to change map |
-| `!yes` / `!no` | Cast vote |
+
+**Note:** Votes use the native CS2 Panorama UI. Press **F1** (Yes) or **F2** (No) to vote.
 
 ### Admin Chat Commands (`!` prefix)
 

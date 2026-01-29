@@ -2,6 +2,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CS2Admin.Models;
 using CS2Admin.Utils;
+using PanoramaVote;
 
 namespace CS2Admin.Services;
 
@@ -13,15 +14,16 @@ public class VoteService
     private readonly int _minimumVoters;
     private readonly Action<string> _broadcastMessage;
     private readonly Action<Vote> _onVotePassed;
+    private readonly CPanoramaVote _panoramaVote;
 
     private Vote? _currentVote;
     private readonly Dictionary<VoteType, DateTime> _cooldowns = new();
-    private CounterStrikeSharp.API.Modules.Timers.Timer? _voteTimer;
 
     public Vote? CurrentVote => _currentVote;
     public bool HasActiveVote => _currentVote?.IsActive == true;
 
     public VoteService(
+        BasePlugin plugin,
         int thresholdPercent,
         int voteDurationSeconds,
         int cooldownSeconds,
@@ -35,11 +37,12 @@ public class VoteService
         _minimumVoters = minimumVoters;
         _broadcastMessage = broadcastMessage;
         _onVotePassed = onVotePassed;
+        _panoramaVote = new CPanoramaVote(plugin);
     }
 
     public (bool Success, string Message) StartVote(VoteType type, CCSPlayerController initiator, CCSPlayerController? targetPlayer = null, string? targetMap = null)
     {
-        if (HasActiveVote)
+        if (HasActiveVote || _panoramaVote.IsVoteInProgress())
         {
             return (false, "A vote is already in progress.");
         }
@@ -71,108 +74,114 @@ public class VoteService
             IsActive = true
         };
 
-        // Initiator automatically votes yes
-        _currentVote.YesVotes.Add(initiator.SteamID);
-
         var voteDescription = GetVoteDescription(_currentVote);
-        _broadcastMessage($"Vote started: {voteDescription}");
-        _broadcastMessage($"Type !yes or !no to vote. ({_voteDurationSeconds} seconds remaining)");
+        var voteTitle = GetVoteTitleKey(type);
+        var callerSlot = initiator.Slot;
 
-        // Start timer for vote expiration
-        _voteTimer = new CounterStrikeSharp.API.Modules.Timers.Timer(_voteDurationSeconds, () =>
+        // Start native CS2 Panorama vote
+        var success = _panoramaVote.SendYesNoVoteToAll(
+            _voteDurationSeconds,
+            callerSlot,
+            voteTitle,
+            voteDescription,
+            OnVoteResult,
+            OnVoteAction
+        );
+
+        if (!success)
         {
-            if (_currentVote?.IsActive == true)
-            {
-                EndVote(false);
-            }
-        });
+            _currentVote = null;
+            return (false, "Failed to start vote.");
+        }
 
         return (true, $"Vote started: {voteDescription}");
     }
 
-    public (bool Success, string Message) CastVote(CCSPlayerController player, bool voteYes)
-    {
-        if (_currentVote == null || !_currentVote.IsActive)
-        {
-            return (false, "No active vote.");
-        }
-
-        var steamId = player.SteamID;
-
-        if (_currentVote.YesVotes.Contains(steamId) || _currentVote.NoVotes.Contains(steamId))
-        {
-            return (false, "You have already voted.");
-        }
-
-        if (voteYes)
-        {
-            _currentVote.YesVotes.Add(steamId);
-        }
-        else
-        {
-            _currentVote.NoVotes.Add(steamId);
-        }
-
-        var playerCount = PlayerFinder.GetPlayerCount();
-        var yesPercent = (double)_currentVote.YesVotes.Count / playerCount * 100;
-
-        // Check if vote passed
-        if (yesPercent >= _thresholdPercent)
-        {
-            EndVote(true);
-            return (true, "Vote passed!");
-        }
-
-        // Check if vote cannot pass anymore
-        var maxPossibleYes = _currentVote.YesVotes.Count + (playerCount - _currentVote.TotalVotes);
-        var maxPossiblePercent = (double)maxPossibleYes / playerCount * 100;
-
-        if (maxPossiblePercent < _thresholdPercent)
-        {
-            EndVote(false);
-            return (true, "Vote failed.");
-        }
-
-        return (true, $"Vote recorded. Current: {_currentVote.YesVotes.Count} yes, {_currentVote.NoVotes.Count} no ({yesPercent:F0}%)");
-    }
-
-    private void EndVote(bool passed)
+    private void OnVoteAction(YesNoVoteAction action, int param1, int param2)
     {
         if (_currentVote == null) return;
+
+        switch (action)
+        {
+            case YesNoVoteAction.VoteAction_Start:
+                // Vote started
+                break;
+
+            case YesNoVoteAction.VoteAction_Vote:
+                // param1 = client slot, param2 = vote choice
+                var player = Utilities.GetPlayerFromSlot(param1);
+                if (player != null)
+                {
+                    var steamId = player.SteamID;
+                    if (param2 == (int)PanoramaVote.CastVote.VOTE_OPTION1) // Yes
+                    {
+                        _currentVote.YesVotes.Add(steamId);
+                    }
+                    else if (param2 == (int)PanoramaVote.CastVote.VOTE_OPTION2) // No
+                    {
+                        _currentVote.NoVotes.Add(steamId);
+                    }
+                }
+                break;
+
+            case YesNoVoteAction.VoteAction_End:
+                // Vote ended - handled in OnVoteResult
+                break;
+        }
+    }
+
+    private bool OnVoteResult(YesNoVoteInfo info)
+    {
+        if (_currentVote == null) return false;
+
+        var playerCount = info.num_clients > 0 ? info.num_clients : PlayerFinder.GetPlayerCount();
+        var yesPercent = playerCount > 0 ? (double)info.yes_votes / playerCount * 100 : 0;
+        var passed = yesPercent >= _thresholdPercent;
 
         _currentVote.IsActive = false;
         _cooldowns[_currentVote.Type] = DateTime.UtcNow;
 
-        _voteTimer?.Kill();
-        _voteTimer = null;
-
         var voteDescription = GetVoteDescription(_currentVote);
-        var playerCount = PlayerFinder.GetPlayerCount();
-        var yesPercent = playerCount > 0 ? (double)_currentVote.YesVotes.Count / playerCount * 100 : 0;
 
         if (passed)
         {
-            _broadcastMessage($"Vote passed: {voteDescription} ({_currentVote.YesVotes.Count}/{playerCount}, {yesPercent:F0}%)");
+            _broadcastMessage($"Vote passed: {voteDescription} ({info.yes_votes}/{playerCount}, {yesPercent:F0}%)");
             _onVotePassed(_currentVote);
         }
         else
         {
-            _broadcastMessage($"Vote failed: {voteDescription} ({_currentVote.YesVotes.Count}/{playerCount}, {yesPercent:F0}%)");
+            _broadcastMessage($"Vote failed: {voteDescription} ({info.yes_votes}/{playerCount}, {yesPercent:F0}%)");
         }
 
         _currentVote = null;
+        return passed;
+    }
+
+    public (bool Success, string Message) CastVote(CCSPlayerController player, bool voteYes)
+    {
+        // With PanoramaVote, players vote using F1/F2 keys directly
+        // This method is kept for backwards compatibility with !yes/!no commands
+        if (_currentVote == null || !_currentVote.IsActive)
+        {
+            return (false, "No active vote. Use F1 (Yes) or F2 (No) to vote.");
+        }
+
+        return (false, "Please use F1 (Yes) or F2 (No) to vote.");
     }
 
     public void CancelVote()
     {
-        if (_currentVote == null) return;
+        if (_panoramaVote.IsVoteInProgress())
+        {
+            _panoramaVote.CancelVote();
+        }
 
-        _currentVote.IsActive = false;
-        _voteTimer?.Kill();
-        _voteTimer = null;
-
-        _broadcastMessage("Vote cancelled.");
-        _currentVote = null;
+        if (_currentVote != null)
+        {
+            _currentVote.IsActive = false;
+            _broadcastMessage("Vote cancelled.");
+            _currentVote = null;
+        }
     }
 
     private static string GetVoteDescription(Vote vote)
@@ -184,6 +193,20 @@ public class VoteService
             VoteType.Restart => "Restart match",
             VoteType.ChangeMap => $"Change map to {vote.TargetMap ?? "unknown"}",
             _ => "Unknown vote"
+        };
+    }
+
+    private static string GetVoteTitleKey(VoteType type)
+    {
+        // These are the default CS2 vote title keys
+        // You can customize these in platform_english.txt
+        return type switch
+        {
+            VoteType.Kick => "#SFUI_vote_kick_player_other",
+            VoteType.Pause => "#SFUI_vote_pause_match",
+            VoteType.Restart => "#SFUI_vote_restart_game",
+            VoteType.ChangeMap => "#SFUI_vote_changelevel",
+            _ => "#SFUI_vote_panorama_vote_default"
         };
     }
 }

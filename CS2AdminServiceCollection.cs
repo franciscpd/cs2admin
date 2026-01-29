@@ -42,6 +42,7 @@ public class CS2AdminServiceCollection : IDisposable
         MatchService = new MatchService(Database, config.EnableLogging, config.WarmupMoney);
 
         VoteService = new VoteService(
+            plugin,
             config.VoteThresholdPercent,
             config.VoteDurationSeconds,
             config.VoteCooldownSeconds,
