@@ -37,8 +37,6 @@ public class AdminManagementCommands
         plugin.AddCommand("css_add_admin", "Add a new admin", OnAddAdminCommand);
         plugin.AddCommand("css_remove_admin", "Remove an admin", OnRemoveAdminCommand);
         plugin.AddCommand("css_list_admins", "List all admins", OnListAdminsCommand);
-        plugin.AddCommand("css_add_group", "Add a new admin group", OnAddGroupCommand);
-        plugin.AddCommand("css_remove_group", "Remove an admin group", OnRemoveGroupCommand);
         plugin.AddCommand("css_list_groups", "List all admin groups", OnListGroupsCommand);
         plugin.AddCommand("css_set_group", "Set admin's group", OnSetGroupCommand);
         plugin.AddCommand("css_reload_admins", "Reload admins from database", OnReloadAdminsCommand);
@@ -159,72 +157,6 @@ public class AdminManagementCommands
         {
             var groupInfo = !string.IsNullOrEmpty(admin.GroupName) ? $" [Group: {admin.GroupName}]" : "";
             command.ReplyToCommand($"  {admin.PlayerName} ({admin.SteamId}): {admin.Flags}{groupInfo}");
-        }
-    }
-
-    [RequiresPermissions("@css/root")]
-    private void OnAddGroupCommand(CCSPlayerController? caller, CommandInfo command)
-    {
-        if (command.ArgCount < 3)
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} Usage: css_add_group <name> <flags> [immunity]");
-            command.ReplyToCommand($"{_config.ChatPrefix} Example: css_add_group moderator @css/kick,@css/ban,@css/chat 50");
-            return;
-        }
-
-        var name = command.GetArg(1);
-        var flags = command.GetArg(2);
-        var immunity = 0;
-
-        if (command.ArgCount > 3 && int.TryParse(command.GetArg(3), out var parsedImmunity))
-        {
-            immunity = parsedImmunity;
-        }
-
-        // Validate flags
-        var flagList = flags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        foreach (var flag in flagList)
-        {
-            if (!ValidFlags.Contains(flag))
-            {
-                command.ReplyToCommand($"{_config.ChatPrefix} Invalid flag: {flag}");
-                return;
-            }
-        }
-
-        var adminSteamId = caller?.SteamID ?? 0;
-        var adminName = caller?.PlayerName ?? "Console";
-
-        if (_adminService.AddGroup(name, flags, immunity, adminSteamId, adminName))
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} Group created: {name} with flags: {flags}, immunity: {immunity}");
-        }
-        else
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} Group already exists with this name.");
-        }
-    }
-
-    [RequiresPermissions("@css/root")]
-    private void OnRemoveGroupCommand(CCSPlayerController? caller, CommandInfo command)
-    {
-        if (command.ArgCount < 2)
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} Usage: css_remove_group <name>");
-            return;
-        }
-
-        var name = command.GetArg(1);
-        var adminSteamId = caller?.SteamID ?? 0;
-        var adminName = caller?.PlayerName ?? "Console";
-
-        if (_adminService.RemoveGroup(name, adminSteamId, adminName))
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} Group removed: {name}");
-        }
-        else
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} Group not found.");
         }
     }
 
@@ -425,72 +357,6 @@ public class AdminManagementCommands
         if (admins.Count > 10)
         {
             player.PrintToChat($"  ... and {admins.Count - 10} more. Use console for full list.");
-        }
-
-        return true;
-    }
-
-    public bool HandleAddGroup(CCSPlayerController player, string[] args)
-    {
-        if (!AdminManager.PlayerHasPermissions(player, "@css/root"))
-        {
-            player.PrintToChat($"{_config.ChatPrefix} You don't have permission to use this command.");
-            return true;
-        }
-
-        if (args.Length < 2)
-        {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .add_group <name> <flags> [immunity]");
-            return true;
-        }
-
-        var name = args[0];
-        var flags = args[1];
-        var immunity = args.Length > 2 && int.TryParse(args[2], out var i) ? i : 0;
-
-        var flagList = flags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        foreach (var flag in flagList)
-        {
-            if (!ValidFlags.Contains(flag))
-            {
-                player.PrintToChat($"{_config.ChatPrefix} Invalid flag: {flag}");
-                return true;
-            }
-        }
-
-        if (_adminService.AddGroup(name, flags, immunity, player.SteamID, player.PlayerName))
-        {
-            player.PrintToChat($"{_config.ChatPrefix} Group created: {name}");
-        }
-        else
-        {
-            player.PrintToChat($"{_config.ChatPrefix} Group already exists.");
-        }
-
-        return true;
-    }
-
-    public bool HandleRemoveGroup(CCSPlayerController player, string[] args)
-    {
-        if (!AdminManager.PlayerHasPermissions(player, "@css/root"))
-        {
-            player.PrintToChat($"{_config.ChatPrefix} You don't have permission to use this command.");
-            return true;
-        }
-
-        if (args.Length < 1)
-        {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: .remove_group <name>");
-            return true;
-        }
-
-        if (_adminService.RemoveGroup(args[0], player.SteamID, player.PlayerName))
-        {
-            player.PrintToChat($"{_config.ChatPrefix} Group removed.");
-        }
-        else
-        {
-            player.PrintToChat($"{_config.ChatPrefix} Group not found.");
         }
 
         return true;

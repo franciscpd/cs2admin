@@ -132,11 +132,11 @@ After that, you can manage admins in-game using `!add_admin` command.
 | `!add_admin <steamid\|player> <flags>` | @css/root | Add a new admin |
 | `!remove_admin <steamid\|player>` | @css/root | Remove an admin |
 | `!list_admins` | @css/root | List all admins |
-| `!add_group <name> <flags> [immunity]` | @css/root | Create admin group |
-| `!remove_group <name>` | @css/root | Remove admin group |
 | `!list_groups` | @css/root | List all groups |
 | `!set_group <steamid\|player> <group>` | @css/root | Assign admin to group |
 | `!reload_admins` | @css/root | Reload admins from database |
+
+**Note:** Admin permissions can be edited via the interactive menu (`!help` > Root Admin Commands > Edit Admin Permissions).
 
 ### Console Commands (`css_` prefix)
 
@@ -307,9 +307,13 @@ Use chat or console commands to manage admins:
 
 ```
 !add_admin 76561198012345678 @css/kick,@css/ban,@css/slay
-!add_group moderator @css/kick,@css/ban,@css/chat 50
 !set_group 76561198012345678 moderator
 ```
+
+You can also use the interactive menu (`!help` > Root Admin Commands) to:
+- Add/remove admins
+- Edit admin permissions (toggle individual flags or set role presets)
+- Assign admins to groups
 
 ### Using Config File
 

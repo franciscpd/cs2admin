@@ -117,8 +117,6 @@ public class ChatCommandHandler
             "add_admin" => _adminManagementCommands.HandleAddAdmin(player, args),
             "remove_admin" => _adminManagementCommands.HandleRemoveAdmin(player, args),
             "list_admins" => _adminManagementCommands.HandleListAdmins(player),
-            "add_group" => _adminManagementCommands.HandleAddGroup(player, args),
-            "remove_group" => _adminManagementCommands.HandleRemoveGroup(player, args),
             "list_groups" => _adminManagementCommands.HandleListGroups(player),
             "set_group" => _adminManagementCommands.HandleSetGroup(player, args),
             "reload_admins" => _adminManagementCommands.HandleReloadAdmins(player),
@@ -148,14 +146,14 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new ChatMenu(title);
+        var menu = new CenterHtmlMenu(title, _plugin);
 
         foreach (var target in players)
         {
             menu.AddMenuOption(target.PlayerName, (p, opt) => onSelect(p, target));
         }
 
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
     #endregion
@@ -342,7 +340,7 @@ public class ChatCommandHandler
 
     private void ShowBanDurationMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new ChatMenu($"Ban {target.PlayerName} - Duration");
+        var menu = new CenterHtmlMenu($"Ban {target.PlayerName} - Duration", _plugin);
 
         menu.AddMenuOption("30 minutes", (p, o) => ExecuteBan(p, target, TimeSpan.FromMinutes(30)));
         menu.AddMenuOption("1 hour", (p, o) => ExecuteBan(p, target, TimeSpan.FromHours(1)));
@@ -350,7 +348,7 @@ public class ChatCommandHandler
         menu.AddMenuOption("1 week", (p, o) => ExecuteBan(p, target, TimeSpan.FromDays(7)));
         menu.AddMenuOption("Permanent", (p, o) => ExecuteBan(p, target, null));
 
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
     private void ExecuteBan(CCSPlayerController admin, CCSPlayerController target, TimeSpan? duration)
@@ -441,7 +439,7 @@ public class ChatCommandHandler
 
     private void ShowMuteDurationMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new ChatMenu($"Mute {target.PlayerName} - Duration");
+        var menu = new CenterHtmlMenu($"Mute {target.PlayerName} - Duration", _plugin);
 
         menu.AddMenuOption("5 minutes", (p, o) => ExecuteMute(p, target, TimeSpan.FromMinutes(5)));
         menu.AddMenuOption("15 minutes", (p, o) => ExecuteMute(p, target, TimeSpan.FromMinutes(15)));
@@ -449,7 +447,7 @@ public class ChatCommandHandler
         menu.AddMenuOption("1 hour", (p, o) => ExecuteMute(p, target, TimeSpan.FromHours(1)));
         menu.AddMenuOption("Permanent", (p, o) => ExecuteMute(p, target, null));
 
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
     private void ExecuteMute(CCSPlayerController admin, CCSPlayerController target, TimeSpan? duration)
@@ -571,7 +569,7 @@ public class ChatCommandHandler
 
     private void ShowSlapDamageMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new ChatMenu($"Slap {target.PlayerName} - Damage");
+        var menu = new CenterHtmlMenu($"Slap {target.PlayerName} - Damage", _plugin);
 
         menu.AddMenuOption("No damage", (p, o) => ExecuteSlap(p, target, 0));
         menu.AddMenuOption("5 damage", (p, o) => ExecuteSlap(p, target, 5));
@@ -579,7 +577,7 @@ public class ChatCommandHandler
         menu.AddMenuOption("25 damage", (p, o) => ExecuteSlap(p, target, 25));
         menu.AddMenuOption("50 damage", (p, o) => ExecuteSlap(p, target, 50));
 
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
     private void ExecuteSlap(CCSPlayerController admin, CCSPlayerController target, int damage)
@@ -843,7 +841,7 @@ public class ChatCommandHandler
 
     private bool HandleHelp(CCSPlayerController player)
     {
-        var menu = new ChatMenu("CS2Admin Help");
+        var menu = new CenterHtmlMenu("CS2Admin Help", _plugin);
 
         menu.AddMenuOption("Vote Commands", (p, opt) => ShowVoteCommands(p));
 
@@ -865,13 +863,13 @@ public class ChatCommandHandler
             menu.AddMenuOption("Root Admin Commands", (p, opt) => ShowRootAdminCommands(p));
         }
 
-        MenuManager.OpenChatMenu(player, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, player, menu);
         return true;
     }
 
     private void ShowVoteCommands(CCSPlayerController player)
     {
-        var menu = new ChatMenu("Vote Commands");
+        var menu = new CenterHtmlMenu("Vote Commands", _plugin);
 
         menu.AddMenuOption("!votekick <player> - Vote to kick", (p, o) => {}, true);
         menu.AddMenuOption("!votepause - Vote to pause", (p, o) => {}, true);
@@ -881,12 +879,12 @@ public class ChatCommandHandler
         menu.AddMenuOption("!stay / !switch - Knife round choice", (p, o) => {}, true);
         menu.AddMenuOption("« Back", (p, o) => HandleHelp(p));
 
-        MenuManager.OpenChatMenu(player, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, player, menu);
     }
 
     private void ShowAdminCommands(CCSPlayerController player)
     {
-        var menu = new ChatMenu("Admin Commands");
+        var menu = new CenterHtmlMenu("Admin Commands", _plugin);
 
         if (AdminManager.PlayerHasPermissions(player, "@css/kick"))
             menu.AddMenuOption("!kick <player> [reason]", (p, o) => {}, true);
@@ -912,24 +910,23 @@ public class ChatCommandHandler
         }
 
         menu.AddMenuOption("« Back", (p, o) => HandleHelp(p));
-        MenuManager.OpenChatMenu(player, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, player, menu);
     }
 
     private void ShowRootAdminCommands(CCSPlayerController player)
     {
-        var menu = new ChatMenu("Root Admin Commands");
+        var menu = new CenterHtmlMenu("Root Admin Commands", _plugin);
 
         menu.AddMenuOption("Add Admin", (p, o) => ShowAddAdminMenu(p));
         menu.AddMenuOption("Remove Admin", (p, o) => ShowRemoveAdminMenu(p));
+        menu.AddMenuOption("Edit Admin Permissions", (p, o) => ShowEditAdminMenu(p));
         menu.AddMenuOption("List Admins", (p, o) => { _adminManagementCommands.HandleListAdmins(p); });
-        menu.AddMenuOption("Add Group", (p, o) => ShowAddGroupMenu(p));
-        menu.AddMenuOption("Remove Group", (p, o) => ShowRemoveGroupMenu(p));
-        menu.AddMenuOption("List Groups", (p, o) => { _adminManagementCommands.HandleListGroups(p); });
         menu.AddMenuOption("Set Admin Group", (p, o) => ShowSetGroupMenu(p));
+        menu.AddMenuOption("List Groups", (p, o) => { _adminManagementCommands.HandleListGroups(p); });
         menu.AddMenuOption("Reload Admins", (p, o) => { _adminManagementCommands.HandleReloadAdmins(p); });
         menu.AddMenuOption("« Back", (p, o) => HandleHelp(p));
 
-        MenuManager.OpenChatMenu(player, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, player, menu);
     }
 
     private void ShowAddAdminMenu(CCSPlayerController admin)
@@ -942,7 +939,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new ChatMenu("Add Admin - Select Player");
+        var menu = new CenterHtmlMenu("Add Admin - Select Player", _plugin);
 
         foreach (var target in players)
         {
@@ -950,12 +947,12 @@ public class ChatCommandHandler
         }
 
         menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
     private void ShowFlagSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new ChatMenu($"Flags for {target.PlayerName}");
+        var menu = new CenterHtmlMenu($"Flags for {target.PlayerName}", _plugin);
 
         menu.AddMenuOption("Full Admin (@css/root)", (p, o) => ExecuteAddAdmin(p, target, "@css/root"));
         menu.AddMenuOption("Moderator (kick,ban,chat)", (p, o) => ExecuteAddAdmin(p, target, "@css/kick,@css/ban,@css/chat"));
@@ -964,7 +961,7 @@ public class ChatCommandHandler
         menu.AddMenuOption("VIP", (p, o) => ExecuteAddAdmin(p, target, "@css/vip,@css/reservation"));
         menu.AddMenuOption("« Back", (p, o) => ShowAddAdminMenu(p));
 
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
     private void ExecuteAddAdmin(CCSPlayerController admin, CCSPlayerController target, string flags)
@@ -990,7 +987,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new ChatMenu("Remove Admin - Select");
+        var menu = new CenterHtmlMenu("Remove Admin - Select", _plugin);
 
         foreach (var targetAdmin in admins.Take(7))
         {
@@ -1013,63 +1010,118 @@ public class ChatCommandHandler
         }
 
         menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
-    private void ShowAddGroupMenu(CCSPlayerController admin)
+    private void ShowEditAdminMenu(CCSPlayerController admin)
     {
-        var menu = new ChatMenu("Add Group - Presets");
+        var admins = _adminService.GetAllAdmins();
 
-        menu.AddMenuOption("Moderator", (p, o) => ExecuteAddGroup(p, "moderator", "@css/kick,@css/ban,@css/chat,@css/slay", 50));
-        menu.AddMenuOption("Admin", (p, o) => ExecuteAddGroup(p, "admin", "@css/kick,@css/ban,@css/chat,@css/slay,@css/changemap,@css/generic", 75));
-        menu.AddMenuOption("Super Admin", (p, o) => ExecuteAddGroup(p, "superadmin", "@css/root", 100));
-        menu.AddMenuOption("VIP", (p, o) => ExecuteAddGroup(p, "vip", "@css/vip,@css/reservation", 0));
-        menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
-
-        MenuManager.OpenChatMenu(admin, menu);
-    }
-
-    private void ExecuteAddGroup(CCSPlayerController admin, string name, string flags, int immunity)
-    {
-        if (_adminService.AddGroup(name, flags, immunity, admin.SteamID, admin.PlayerName))
+        if (admins.Count == 0)
         {
-            admin.PrintToChat($"{_config.ChatPrefix} Group created: {name}");
-        }
-        else
-        {
-            admin.PrintToChat($"{_config.ChatPrefix} Group already exists.");
-        }
-    }
-
-    private void ShowRemoveGroupMenu(CCSPlayerController admin)
-    {
-        var groups = _adminService.GetAllGroups();
-
-        if (groups.Count == 0)
-        {
-            admin.PrintToChat($"{_config.ChatPrefix} No groups found.");
+            admin.PrintToChat($"{_config.ChatPrefix} No admins found.");
             return;
         }
 
-        var menu = new ChatMenu("Remove Group - Select");
+        var menu = new CenterHtmlMenu("Edit Admin - Select", _plugin);
 
-        foreach (var group in groups)
+        foreach (var targetAdmin in admins.Take(7))
         {
-            menu.AddMenuOption(group.Name, (p, o) =>
-            {
-                if (_adminService.RemoveGroup(group.Name, p.SteamID, p.PlayerName))
-                {
-                    p.PrintToChat($"{_config.ChatPrefix} Group removed: {group.Name}");
-                }
-                else
-                {
-                    p.PrintToChat($"{_config.ChatPrefix} Failed to remove group.");
-                }
-            });
+            menu.AddMenuOption($"{targetAdmin.PlayerName}", (p, o) =>
+                ShowAdminPermissionsMenu(p, targetAdmin));
+        }
+
+        if (admins.Count > 7)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} Showing first 7 admins.");
         }
 
         menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
+    }
+
+    private void ShowAdminPermissionsMenu(CCSPlayerController admin, Admin targetAdmin)
+    {
+        var menu = new CenterHtmlMenu($"Permissions: {targetAdmin.PlayerName}", _plugin);
+
+        var currentFlags = targetAdmin.Flags ?? "None";
+        menu.AddMenuOption($"Current: {currentFlags}", (p, o) => {}, true);
+
+        menu.AddMenuOption("Add/Remove Permissions", (p, o) => ShowAddFlagsMenu(p, targetAdmin));
+        menu.AddMenuOption("Set Role Preset", (p, o) => ShowFlagSelectionMenuForEdit(p, targetAdmin));
+        menu.AddMenuOption("« Back", (p, o) => ShowEditAdminMenu(p));
+
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
+    }
+
+    private void ShowAddFlagsMenu(CCSPlayerController admin, Admin targetAdmin)
+    {
+        var updatedAdmin = _adminService.GetAdmin(targetAdmin.SteamId) ?? targetAdmin;
+
+        var menu = new CenterHtmlMenu($"Toggle Flags: {updatedAdmin.PlayerName}", _plugin);
+
+        foreach (var flag in AvailableFlags)
+        {
+            var hasFlag = updatedAdmin.Flags?.Contains(flag) ?? false;
+            var label = hasFlag ? $"[X] {flag}" : $"[ ] {flag}";
+
+            menu.AddMenuOption(label, (p, o) => ExecuteToggleFlag(p, updatedAdmin, flag));
+        }
+
+        menu.AddMenuOption("« Back", (p, o) => ShowAdminPermissionsMenu(p, updatedAdmin));
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
+    }
+
+    private void ExecuteToggleFlag(CCSPlayerController admin, Admin targetAdmin, string flag)
+    {
+        var currentFlags = targetAdmin.Flags?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+            ?? new List<string>();
+
+        if (currentFlags.Contains(flag))
+        {
+            currentFlags.Remove(flag);
+            admin.PrintToChat($"{_config.ChatPrefix} Removed {flag} from {targetAdmin.PlayerName}");
+        }
+        else
+        {
+            currentFlags.Add(flag);
+            admin.PrintToChat($"{_config.ChatPrefix} Added {flag} to {targetAdmin.PlayerName}");
+        }
+
+        var newFlags = string.Join(",", currentFlags);
+        _adminService.UpdateAdminFlags(targetAdmin.SteamId, newFlags, admin.SteamID, admin.PlayerName);
+
+        var updatedAdmin = _adminService.GetAdmin(targetAdmin.SteamId);
+        if (updatedAdmin != null)
+        {
+            ShowAddFlagsMenu(admin, updatedAdmin);
+        }
+    }
+
+    private void ShowFlagSelectionMenuForEdit(CCSPlayerController admin, Admin targetAdmin)
+    {
+        var menu = new CenterHtmlMenu($"Set Role: {targetAdmin.PlayerName}", _plugin);
+
+        menu.AddMenuOption("Full Admin (@css/root)", (p, o) => ExecuteSetFlags(p, targetAdmin, "@css/root"));
+        menu.AddMenuOption("Moderator", (p, o) => ExecuteSetFlags(p, targetAdmin, "@css/kick,@css/ban,@css/chat"));
+        menu.AddMenuOption("Basic Admin", (p, o) => ExecuteSetFlags(p, targetAdmin, "@css/kick,@css/slay"));
+        menu.AddMenuOption("Match Admin", (p, o) => ExecuteSetFlags(p, targetAdmin, "@css/generic,@css/changemap"));
+        menu.AddMenuOption("VIP", (p, o) => ExecuteSetFlags(p, targetAdmin, "@css/vip,@css/reservation"));
+        menu.AddMenuOption("« Back", (p, o) => ShowAdminPermissionsMenu(p, targetAdmin));
+
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
+    }
+
+    private void ExecuteSetFlags(CCSPlayerController admin, Admin targetAdmin, string flags)
+    {
+        _adminService.UpdateAdminFlags(targetAdmin.SteamId, flags, admin.SteamID, admin.PlayerName);
+        admin.PrintToChat($"{_config.ChatPrefix} Updated {targetAdmin.PlayerName}'s permissions to: {flags}");
+
+        var updatedAdmin = _adminService.GetAdmin(targetAdmin.SteamId);
+        if (updatedAdmin != null)
+        {
+            ShowAdminPermissionsMenu(admin, updatedAdmin);
+        }
     }
 
     private void ShowSetGroupMenu(CCSPlayerController admin)
@@ -1082,7 +1134,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new ChatMenu("Set Group - Select Admin");
+        var menu = new CenterHtmlMenu("Set Group - Select Admin", _plugin);
 
         foreach (var targetAdmin in admins.Take(7))
         {
@@ -1095,7 +1147,7 @@ public class ChatCommandHandler
         }
 
         menu.AddMenuOption("« Back", (p, o) => ShowRootAdminCommands(p));
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
     private void ShowGroupSelectionForAdmin(CCSPlayerController admin, ulong targetSteamId, string targetName)
@@ -1108,7 +1160,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new ChatMenu($"Group for {targetName}");
+        var menu = new CenterHtmlMenu($"Group for {targetName}", _plugin);
 
         foreach (var group in groups)
         {
@@ -1126,7 +1178,7 @@ public class ChatCommandHandler
         }
 
         menu.AddMenuOption("« Back", (p, o) => ShowSetGroupMenu(p));
-        MenuManager.OpenChatMenu(admin, menu);
+        MenuManager.OpenCenterHtmlMenu(_plugin, admin, menu);
     }
 
     #endregion

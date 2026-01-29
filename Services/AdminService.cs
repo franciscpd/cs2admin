@@ -203,6 +203,44 @@ public class AdminService
         return true;
     }
 
+    public bool UpdateAdminFlags(ulong steamId, string newFlags, ulong updatedBySteamId, string updatedByName)
+    {
+        var admin = GetAdmin(steamId);
+        if (admin == null) return false;
+
+        var connection = _database.GetConnection();
+        const string sql = "UPDATE admins SET flags = @flags WHERE steam_id = @steamId";
+
+        using var command = new SqliteCommand(sql, connection);
+        command.Parameters.AddWithValue("@flags", newFlags);
+        command.Parameters.AddWithValue("@steamId", (long)steamId);
+        command.ExecuteNonQuery();
+
+        // Update runtime permissions
+        var player = Utilities.GetPlayerFromSteamId(steamId);
+        if (player != null)
+        {
+            AdminManager.RemovePlayerPermissions(player);
+        }
+
+        var flags = new List<string>();
+        if (!string.IsNullOrEmpty(admin.GroupName))
+        {
+            var group = GetGroup(admin.GroupName);
+            if (group != null) flags.AddRange(group.GetFlags());
+        }
+        flags.AddRange(newFlags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+
+        AdminManager.AddPlayerPermissions(new SteamID(steamId), flags.Distinct().ToArray());
+
+        if (_enableLogging)
+        {
+            _database.LogAction("UPDATE_ADMIN_FLAGS", updatedBySteamId, updatedByName, steamId, admin.PlayerName, $"New Flags: {newFlags}");
+        }
+
+        return true;
+    }
+
     #endregion
 
     #region Group Management
