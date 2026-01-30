@@ -26,8 +26,6 @@ public class VoteCommands
         plugin.AddCommand("css_voterestart", "Start a vote to restart the match", OnVoteRestartCommand);
         plugin.AddCommand("css_votechangemap", "Start a vote to change the map", OnVoteChangeMapCommand);
         plugin.AddCommand("css_votemap", "Start a vote to change the map", OnVoteChangeMapCommand);
-        plugin.AddCommand("css_yes", "Vote yes", OnVoteYesCommand);
-        plugin.AddCommand("css_no", "Vote no", OnVoteNoCommand);
     }
 
     private void OnVoteKickCommand(CCSPlayerController? caller, CommandInfo command)
@@ -116,33 +114,4 @@ public class VoteCommands
         }
     }
 
-    private void OnVoteYesCommand(CCSPlayerController? caller, CommandInfo command)
-    {
-        if (caller == null || !caller.IsValid)
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} This command can only be used by players.");
-            return;
-        }
-
-        var result = _voteService.CastVote(caller, true);
-        if (!result.Success)
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} {result.Message}");
-        }
-    }
-
-    private void OnVoteNoCommand(CCSPlayerController? caller, CommandInfo command)
-    {
-        if (caller == null || !caller.IsValid)
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} This command can only be used by players.");
-            return;
-        }
-
-        var result = _voteService.CastVote(caller, false);
-        if (!result.Success)
-        {
-            command.ReplyToCommand($"{_config.ChatPrefix} {result.Message}");
-        }
-    }
 }

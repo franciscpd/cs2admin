@@ -166,18 +166,6 @@ public class VoteService
         return passed;
     }
 
-    public (bool Success, string Message) CastVote(CCSPlayerController player, bool voteYes)
-    {
-        // With PanoramaVote, players vote using F1/F2 keys directly
-        // This method is kept for backwards compatibility with !yes/!no commands
-        if (_currentVote == null || !_currentVote.IsActive)
-        {
-            return (false, "No active vote. Use F1 (Yes) or F2 (No) to vote.");
-        }
-
-        return (false, "Please use F1 (Yes) or F2 (No) to vote.");
-    }
-
     public void CancelVote()
     {
         if (_panoramaVote.IsVoteInProgress())

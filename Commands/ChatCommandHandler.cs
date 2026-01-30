@@ -90,8 +90,6 @@ public class ChatCommandHandler
             "votepause" => HandleVotePause(player),
             "voterestart" => HandleVoteRestart(player),
             "votechangemap" or "votemap" => HandleVoteChangeMap(player, args),
-            "yes" => HandleVoteYes(player),
-            "no" => HandleVoteNo(player),
 
             // Admin commands
             "kick" => HandleKick(player, args),
@@ -233,26 +231,6 @@ public class ChatCommandHandler
             player.PrintToChat($"{_config.ChatPrefix} {result.Message}");
         }
 
-        return true;
-    }
-
-    private bool HandleVoteYes(CCSPlayerController player)
-    {
-        var result = _voteService.CastVote(player, true);
-        if (!result.Success)
-        {
-            player.PrintToChat($"{_config.ChatPrefix} {result.Message}");
-        }
-        return true;
-    }
-
-    private bool HandleVoteNo(CCSPlayerController player)
-    {
-        var result = _voteService.CastVote(player, false);
-        if (!result.Success)
-        {
-            player.PrintToChat($"{_config.ChatPrefix} {result.Message}");
-        }
         return true;
     }
 

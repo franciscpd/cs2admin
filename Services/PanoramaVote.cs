@@ -102,6 +102,8 @@ public class CPanoramaVote
             voteController.VoteOptionCount[2] = 0;
             voteController.VoteOptionCount[3] = 0;
             voteController.VoteOptionCount[4] = 0;
+            voteController.ActiveIssueIndex = -1;
+            voteController.PotentialVotes = 0;
         }
     }
     /// <summary>
@@ -262,6 +264,8 @@ public class CPanoramaVote
 
         VoteController.PotentialVotes = m_iVoterCount;
         VoteController.ActiveIssueIndex = 2;
+        VoteController.OnlyTeamToVote = -1;  // Allow all teams to vote
+        VoteController.IsYesNoVote = true;   // Indicate this is a Yes/No vote
 
         m_VoteResult = resultCallback;
         m_VoteHandler = handler;
