@@ -854,7 +854,7 @@ public class ChatCommandHandler
         menu.AddItem("!votepause - Vote to pause", DisableOption.DisableShowNumber);
         menu.AddItem("!voterestart - Vote to restart", DisableOption.DisableShowNumber);
         menu.AddItem("!votemap <map> - Vote to change map", DisableOption.DisableShowNumber);
-        menu.AddItem("!yes / !no - Cast your vote", DisableOption.DisableShowNumber);
+        menu.AddItem("F1 / F2 - Cast your vote", DisableOption.DisableShowNumber);
         menu.AddItem("!stay / !switch - Knife round choice", DisableOption.DisableShowNumber);
         menu.AddItem("« Back", (p, o) => HandleHelp(p));
 
