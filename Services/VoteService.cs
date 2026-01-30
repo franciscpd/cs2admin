@@ -88,15 +88,46 @@ public class VoteService
         var voteTitle = GetVoteTitleKey(type);
         var callerSlot = initiator.Slot;
 
-        // Start native CS2 Panorama vote
-        var success = _panoramaVote.SendYesNoVoteToAll(
-            _voteDurationSeconds,
-            callerSlot,
-            voteTitle,
-            voteDescription,
-            OnVoteResult,
-            OnVoteAction
-        );
+        bool success;
+
+        // Votekick and Votepause: only the initiator's team can vote
+        if (type == VoteType.Kick || type == VoteType.Pause)
+        {
+            var initiatorTeam = (int)initiator.Team;
+            var filter = new RecipientFilter();
+            var teamPlayers = Utilities.GetPlayers()
+                .Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV
+                    && p.Connected == PlayerConnectedState.PlayerConnected
+                    && (int)p.Team == initiatorTeam)
+                .ToList();
+
+            foreach (var player in teamPlayers)
+            {
+                filter.Add(player);
+            }
+
+            success = _panoramaVote.SendYesNoVote(
+                _voteDurationSeconds,
+                callerSlot,
+                voteTitle,
+                voteDescription,
+                filter,
+                OnVoteResult,
+                OnVoteAction
+            );
+        }
+        else
+        {
+            // Voterestart and Votemap: everyone can vote
+            success = _panoramaVote.SendYesNoVoteToAll(
+                _voteDurationSeconds,
+                callerSlot,
+                voteTitle,
+                voteDescription,
+                OnVoteResult,
+                OnVoteAction
+            );
+        }
 
         if (!success)
         {
@@ -144,9 +175,9 @@ public class VoteService
     {
         if (_currentVote == null) return false;
 
-        var playerCount = info.num_clients > 0 ? info.num_clients : PlayerFinder.GetPlayerCount();
-        var yesPercent = playerCount > 0 ? (double)info.yes_votes / playerCount * 100 : 0;
-        var passed = yesPercent >= _thresholdPercent;
+        var totalVotes = info.yes_votes + info.no_votes;
+        var yesPercent = totalVotes > 0 ? (double)info.yes_votes / totalVotes * 100 : 0;
+        var passed = totalVotes > 0 && yesPercent >= _thresholdPercent;
 
         _currentVote.IsActive = false;
         _cooldowns[_currentVote.Type] = DateTime.UtcNow;
@@ -155,12 +186,12 @@ public class VoteService
 
         if (passed)
         {
-            _broadcastMessage($"Vote passed: {voteDescription} ({info.yes_votes}/{playerCount}, {yesPercent:F0}%)");
+            _broadcastMessage($"Vote passed: {voteDescription} ({info.yes_votes}/{totalVotes}, {yesPercent:F0}%)");
             _onVotePassed(_currentVote);
         }
         else
         {
-            _broadcastMessage($"Vote failed: {voteDescription} ({info.yes_votes}/{playerCount}, {yesPercent:F0}%)");
+            _broadcastMessage($"Vote failed: {voteDescription} ({info.yes_votes}/{totalVotes}, {yesPercent:F0}%)");
         }
 
         _currentVote = null;
