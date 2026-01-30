@@ -880,9 +880,6 @@ public class ChatCommandHandler
         menu.AddItem("Vote Pause Match", (p, o) => HandleVotePause(p));
         menu.AddItem("Vote Restart Match", (p, o) => HandleVoteRestart(p));
         menu.AddItem("Vote Change Map", (p, o) => HandleVoteChangeMap(p, Array.Empty<string>()));
-        menu.AddItem("", DisableOption.DisableShowNumber);
-        menu.AddItem("Use F1/F2 to vote when prompted", DisableOption.DisableShowNumber);
-        menu.AddItem("!stay / !switch - Knife round", DisableOption.DisableShowNumber);
         menu.AddItem("« Back", (p, o) => HandleHelp(p));
 
         menu.Display(player, 30);
