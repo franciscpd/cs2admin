@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using CS2Admin.Models;
 using CS2Admin.Utils;
 using PanoramaVote;
@@ -205,5 +206,62 @@ public class VoteService
             VoteType.ChangeMap => "#SFUI_vote_changelevel",
             _ => "#SFUI_vote_panorama_vote_default"
         };
+    }
+
+    /// <summary>
+    /// Starts a side choice vote for the knife round winner team.
+    /// F1 = Stay, F2 = Switch
+    /// </summary>
+    /// <param name="winnerTeam">The team that won the knife round (2 = T, 3 = CT)</param>
+    /// <param name="onSideChosen">Callback with true = stay, false = switch</param>
+    /// <returns>True if vote started successfully</returns>
+    public bool StartSideChoiceVote(int winnerTeam, Action<bool> onSideChosen)
+    {
+        if (_panoramaVote.IsVoteInProgress())
+        {
+            return false;
+        }
+
+        // Create filter for only the winning team
+        var filter = new RecipientFilter();
+        var winnerPlayers = Utilities.GetPlayers()
+            .Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV
+                && p.Connected == PlayerConnectedState.PlayerConnected
+                && (int)p.Team == winnerTeam)
+            .ToList();
+
+        if (winnerPlayers.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var player in winnerPlayers)
+        {
+            filter.Add(player);
+        }
+
+        var teamName = winnerTeam == 2 ? "Terrorists" : "Counter-Terrorists";
+
+        // Start the vote - F1 = Stay (Yes), F2 = Switch (No)
+        var success = _panoramaVote.SendYesNoVote(
+            30, // 30 seconds to choose
+            VoteConstants.VOTE_CALLER_SERVER,
+            "#SFUI_vote_passed_continue_or_swap", // "Stay or Switch?"
+            $"{teamName} choose side: F1=Stay, F2=Switch",
+            filter,
+            (info) =>
+            {
+                // Majority wins - if more yes votes, stay; otherwise switch
+                var stayOnSide = info.yes_votes >= info.no_votes;
+                onSideChosen(stayOnSide);
+
+                var choice = stayOnSide ? "STAY" : "SWITCH";
+                _broadcastMessage($"{teamName} chose to {choice}. Match starting!");
+
+                return true; // Always "passes" - it's a choice, not approval
+            }
+        );
+
+        return success;
     }
 }

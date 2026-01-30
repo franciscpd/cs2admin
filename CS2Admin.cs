@@ -9,7 +9,7 @@ namespace CS2Admin;
 public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 {
     public override string ModuleName => "CS2Admin";
-    public override string ModuleVersion => "0.6.12";
+    public override string ModuleVersion => "0.6.13";
     public override string ModuleAuthor => "CS2Admin Team";
     public override string ModuleDescription => "Server administration plugin for Counter-Strike 2";
 
@@ -176,6 +176,12 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
             var teamName = winnerTeam == 2 ? "Terrorists" : "Counter-Terrorists";
             var message = Config.KnifeRoundWinnerMessage.Replace("{team}", teamName);
             Server.PrintToChatAll($"{Config.ChatPrefix} {message}");
+
+            // Start side choice vote for the winning team
+            _services.VoteService.StartSideChoiceVote(winnerTeam, (stayOnSide) =>
+            {
+                _services.MatchService.ChooseSide(stayOnSide);
+            });
         }
 
         return HookResult.Continue;

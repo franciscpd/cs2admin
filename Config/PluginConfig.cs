@@ -72,7 +72,7 @@ public class PluginConfig : BasePluginConfig
     public string KnifeRoundMessage { get; set; } = "Knife round! Winner chooses side.";
 
     [JsonPropertyName("KnifeRoundWinnerMessage")]
-    public string KnifeRoundWinnerMessage { get; set; } = "{team} won the knife round! Type !stay or !switch to choose side.";
+    public string KnifeRoundWinnerMessage { get; set; } = "{team} won the knife round! Vote: F1 = Stay, F2 = Switch";
 
     // GOTV Settings
     [JsonPropertyName("EnableGOTV")]

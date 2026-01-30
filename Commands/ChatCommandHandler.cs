@@ -109,10 +109,6 @@ public class ChatCommandHandler
             "endwarmup" => HandleEndWarmup(player),
             "knife" => HandleKnife(player),
 
-            // Knife round side choice (available to knife round winners)
-            "stay" => HandleStay(player),
-            "switch" => HandleSwitch(player),
-
             // Admin management commands
             "add_admin" => _adminManagementCommands.HandleAddAdmin(player, args),
             "remove_admin" => _adminManagementCommands.HandleRemoveAdmin(player, args),
@@ -795,48 +791,6 @@ public class ChatCommandHandler
             Server.PrintToChatAll($"{_config.ChatPrefix} Knife only mode enabled by {player.PlayerName}.");
         }
 
-        return true;
-    }
-
-    private bool HandleStay(CCSPlayerController player)
-    {
-        if (!_matchService.WaitingForSideChoice)
-        {
-            player.PrintToChat($"{_config.ChatPrefix} No side choice pending.");
-            return true;
-        }
-
-        // Check if player is on the winning team
-        var playerTeam = player.TeamNum;
-        if (playerTeam != _matchService.KnifeRoundWinnerTeam)
-        {
-            player.PrintToChat($"{_config.ChatPrefix} Only the knife round winner can choose side.");
-            return true;
-        }
-
-        _matchService.ChooseSide(true, player);
-        Server.PrintToChatAll($"{_config.ChatPrefix} {player.PlayerName} chose to STAY on current side. Match starting!");
-        return true;
-    }
-
-    private bool HandleSwitch(CCSPlayerController player)
-    {
-        if (!_matchService.WaitingForSideChoice)
-        {
-            player.PrintToChat($"{_config.ChatPrefix} No side choice pending.");
-            return true;
-        }
-
-        // Check if player is on the winning team
-        var playerTeam = player.TeamNum;
-        if (playerTeam != _matchService.KnifeRoundWinnerTeam)
-        {
-            player.PrintToChat($"{_config.ChatPrefix} Only the knife round winner can choose side.");
-            return true;
-        }
-
-        _matchService.ChooseSide(false, player);
-        Server.PrintToChatAll($"{_config.ChatPrefix} {player.PlayerName} chose to SWITCH sides. Match starting!");
         return true;
     }
 
