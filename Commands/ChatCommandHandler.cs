@@ -221,7 +221,7 @@ public class ChatCommandHandler
     {
         if (args.Length < 1)
         {
-            player.PrintToChat($"{_config.ChatPrefix} Usage: !votechangemap <map>");
+            ShowMapSelectionMenu(player);
             return true;
         }
 
@@ -232,6 +232,32 @@ public class ChatCommandHandler
         }
 
         return true;
+    }
+
+    private void ShowMapSelectionMenu(CCSPlayerController player)
+    {
+        if (_config.VoteMaps.Count == 0)
+        {
+            player.PrintToChat($"{_config.ChatPrefix} No maps configured for voting.");
+            return;
+        }
+
+        var menu = new WasdMenu("Vote Map - Select Map", _plugin);
+
+        foreach (var map in _config.VoteMaps)
+        {
+            var mapName = map; // Capture for closure
+            menu.AddItem(map, (p, opt) =>
+            {
+                var result = _voteService.StartVote(VoteType.ChangeMap, p, targetMap: mapName);
+                if (!result.Success)
+                {
+                    p.PrintToChat($"{_config.ChatPrefix} {result.Message}");
+                }
+            });
+        }
+
+        menu.Display(player, 30);
     }
 
     #endregion
@@ -850,12 +876,13 @@ public class ChatCommandHandler
     {
         var menu = new WasdMenu("Vote Commands", _plugin);
 
-        menu.AddItem("!votekick <player> - Vote to kick", DisableOption.DisableShowNumber);
-        menu.AddItem("!votepause - Vote to pause", DisableOption.DisableShowNumber);
-        menu.AddItem("!voterestart - Vote to restart", DisableOption.DisableShowNumber);
-        menu.AddItem("!votemap <map> - Vote to change map", DisableOption.DisableShowNumber);
-        menu.AddItem("F1 / F2 - Cast your vote", DisableOption.DisableShowNumber);
-        menu.AddItem("!stay / !switch - Knife round choice", DisableOption.DisableShowNumber);
+        menu.AddItem("Vote Kick Player", (p, o) => HandleVoteKick(p, Array.Empty<string>()));
+        menu.AddItem("Vote Pause Match", (p, o) => HandleVotePause(p));
+        menu.AddItem("Vote Restart Match", (p, o) => HandleVoteRestart(p));
+        menu.AddItem("Vote Change Map", (p, o) => HandleVoteChangeMap(p, Array.Empty<string>()));
+        menu.AddItem("", DisableOption.DisableShowNumber);
+        menu.AddItem("Use F1/F2 to vote when prompted", DisableOption.DisableShowNumber);
+        menu.AddItem("!stay / !switch - Knife round", DisableOption.DisableShowNumber);
         menu.AddItem("« Back", (p, o) => HandleHelp(p));
 
         menu.Display(player, 30);

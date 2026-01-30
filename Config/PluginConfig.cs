@@ -92,4 +92,18 @@ public class PluginConfig : BasePluginConfig
 
     [JsonPropertyName("GOTVAutoRecord")]
     public bool GOTVAutoRecord { get; set; } = false;
+
+    // Vote Maps
+    [JsonPropertyName("VoteMaps")]
+    public List<string> VoteMaps { get; set; } = new()
+    {
+        "de_dust2",
+        "de_mirage",
+        "de_inferno",
+        "de_nuke",
+        "de_overpass",
+        "de_ancient",
+        "de_anubis",
+        "de_vertigo"
+    };
 }
