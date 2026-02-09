@@ -372,6 +372,7 @@ public class MatchService
         Server.ExecuteCommand("mp_buy_during_immunity_time 0");
         Server.ExecuteCommand("mp_startmoney 0");
         Server.ExecuteCommand("mp_maxmoney 0");
+        Server.ExecuteCommand("mp_afterroundmoney 0");
 
         // End CS2 engine warmup - without this the engine stays in warmup mode
         // and rounds don't finalize properly after kills
@@ -389,9 +390,6 @@ public class MatchService
         _knifeRoundWinnerTeam = winnerTeam;
         _waitingForSideChoice = true;
         _isKnifeRound = false;
-
-        // Pause match while waiting for side choice
-        Server.ExecuteCommand("mp_pause_match");
     }
 
     public void ChooseSide(bool stayOnSide, CCSPlayerController? admin = null)
@@ -410,6 +408,8 @@ public class MatchService
         Server.ExecuteCommand("mp_buy_during_immunity_time 1");
         Server.ExecuteCommand("mp_startmoney 800");
         Server.ExecuteCommand("mp_maxmoney 16000");
+        Server.ExecuteCommand("mp_afterroundmoney 0");
+        Server.ExecuteCommand("mp_death_drop_gun 1");
 
         if (!stayOnSide)
         {

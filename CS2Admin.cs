@@ -178,10 +178,17 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
             var message = Config.KnifeRoundWinnerMessage.Replace("{team}", teamName);
             Server.PrintToChatAll($"{Config.ChatPrefix} {message}");
 
-            // Start side choice vote for the winning team
-            _services.VoteService.StartSideChoiceVote(winnerTeam, (stayOnSide) =>
+            // Delay the vote to ensure round end processing is complete
+            // and the Panorama vote UI can render properly
+            AddTimer(3.0f, () =>
             {
-                _services.MatchService.ChooseSide(stayOnSide);
+                if (_services?.MatchService.WaitingForSideChoice == true)
+                {
+                    _services.VoteService.StartSideChoiceVote(winnerTeam, (stayOnSide) =>
+                    {
+                        _services.MatchService.ChooseSide(stayOnSide);
+                    });
+                }
             });
         }
 
