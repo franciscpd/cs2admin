@@ -83,8 +83,8 @@ public class ChatCommandHandler
 
         var handled = command switch
         {
-            // Help command
-            "help" => HandleHelp(player),
+            // Command menu
+            "command" => HandleHelp(player),
 
             // Public vote commands
             "votekick" => HandleVoteKick(player, args),
@@ -144,7 +144,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new WasdMenu(title, _plugin);
+        var menu = new WasdMenu(title, _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var target in players)
         {
@@ -240,7 +240,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new WasdMenu("Vote Map - Select Map", _plugin);
+        var menu = new WasdMenu("Vote Map - Select Map", _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var map in _config.VoteMaps)
         {
@@ -344,7 +344,7 @@ public class ChatCommandHandler
 
     private void ShowBanDurationMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new WasdMenu($"Ban {target.PlayerName} - Duration", _plugin);
+        var menu = new WasdMenu($"Ban {target.PlayerName} - Duration", _plugin) { WasdMenu_FreezePlayer = true };
 
         menu.AddItem("30 minutes", (p, o) => ExecuteBan(p, target, TimeSpan.FromMinutes(30)));
         menu.AddItem("1 hour", (p, o) => ExecuteBan(p, target, TimeSpan.FromHours(1)));
@@ -443,7 +443,7 @@ public class ChatCommandHandler
 
     private void ShowMuteDurationMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new WasdMenu($"Mute {target.PlayerName} - Duration", _plugin);
+        var menu = new WasdMenu($"Mute {target.PlayerName} - Duration", _plugin) { WasdMenu_FreezePlayer = true };
 
         menu.AddItem("5 minutes", (p, o) => ExecuteMute(p, target, TimeSpan.FromMinutes(5)));
         menu.AddItem("15 minutes", (p, o) => ExecuteMute(p, target, TimeSpan.FromMinutes(15)));
@@ -573,7 +573,7 @@ public class ChatCommandHandler
 
     private void ShowSlapDamageMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new WasdMenu($"Slap {target.PlayerName} - Damage", _plugin);
+        var menu = new WasdMenu($"Slap {target.PlayerName} - Damage", _plugin) { WasdMenu_FreezePlayer = true };
 
         menu.AddItem("No damage", (p, o) => ExecuteSlap(p, target, 0));
         menu.AddItem("5 damage", (p, o) => ExecuteSlap(p, target, 5));
@@ -825,7 +825,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new WasdMenu("Select players for Team 1 (T)", _plugin);
+        var menu = new WasdMenu("Select players for Team 1 (T)", _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var target in players)
         {
@@ -887,7 +887,7 @@ public class ChatCommandHandler
 
     private bool HandleHelp(CCSPlayerController player)
     {
-        var menu = new WasdMenu("CS2Admin Help", _plugin);
+        var menu = new WasdMenu("CS2Admin Help", _plugin) { WasdMenu_FreezePlayer = true };
 
         menu.AddItem("Vote Commands", (p, opt) => ShowVoteCommands(p));
 
@@ -915,7 +915,7 @@ public class ChatCommandHandler
 
     private void ShowVoteCommands(CCSPlayerController player)
     {
-        var menu = new WasdMenu("Vote Commands", _plugin);
+        var menu = new WasdMenu("Vote Commands", _plugin) { WasdMenu_FreezePlayer = true };
 
         menu.AddItem("Vote Kick Player", (p, o) => HandleVoteKick(p, Array.Empty<string>()));
         menu.AddItem("Vote Pause Match", (p, o) => HandleVotePause(p));
@@ -928,7 +928,7 @@ public class ChatCommandHandler
 
     private void ShowAdminCommands(CCSPlayerController player)
     {
-        var menu = new WasdMenu("Admin Commands", _plugin);
+        var menu = new WasdMenu("Admin Commands", _plugin) { WasdMenu_FreezePlayer = true };
 
         if (AdminManager.PlayerHasPermissions(player, "@css/kick"))
             menu.AddItem("!kick <player> [reason]", DisableOption.DisableShowNumber);
@@ -960,7 +960,7 @@ public class ChatCommandHandler
 
     private void ShowRootAdminCommands(CCSPlayerController player)
     {
-        var menu = new WasdMenu("Root Admin Commands", _plugin);
+        var menu = new WasdMenu("Root Admin Commands", _plugin) { WasdMenu_FreezePlayer = true };
 
         menu.AddItem("Add Admin", (p, o) => ShowAddAdminMenu(p));
         menu.AddItem("Remove Admin", (p, o) => ShowRemoveAdminMenu(p));
@@ -984,7 +984,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new WasdMenu("Add Admin - Select Player", _plugin);
+        var menu = new WasdMenu("Add Admin - Select Player", _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var target in players)
         {
@@ -997,7 +997,7 @@ public class ChatCommandHandler
 
     private void ShowFlagSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = new WasdMenu($"Flags for {target.PlayerName}", _plugin);
+        var menu = new WasdMenu($"Flags for {target.PlayerName}", _plugin) { WasdMenu_FreezePlayer = true };
 
         menu.AddItem("Full Admin (@css/root)", (p, o) => ExecuteAddAdmin(p, target, "@css/root"));
         menu.AddItem("Moderator (kick,ban,chat)", (p, o) => ExecuteAddAdmin(p, target, "@css/kick,@css/ban,@css/chat"));
@@ -1032,7 +1032,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new WasdMenu("Remove Admin - Select", _plugin);
+        var menu = new WasdMenu("Remove Admin - Select", _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var targetAdmin in admins.Take(7))
         {
@@ -1068,7 +1068,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new WasdMenu("Edit Admin - Select", _plugin);
+        var menu = new WasdMenu("Edit Admin - Select", _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var targetAdmin in admins.Take(7))
         {
@@ -1087,7 +1087,7 @@ public class ChatCommandHandler
 
     private void ShowAdminPermissionsMenu(CCSPlayerController admin, Admin targetAdmin)
     {
-        var menu = new WasdMenu($"Permissions: {targetAdmin.PlayerName}", _plugin);
+        var menu = new WasdMenu($"Permissions: {targetAdmin.PlayerName}", _plugin) { WasdMenu_FreezePlayer = true };
 
         var currentFlags = targetAdmin.Flags ?? "None";
         menu.AddItem($"Current: {currentFlags}", DisableOption.DisableShowNumber);
@@ -1103,7 +1103,7 @@ public class ChatCommandHandler
     {
         var updatedAdmin = _adminService.GetAdmin(targetAdmin.SteamId) ?? targetAdmin;
 
-        var menu = new WasdMenu($"Toggle Flags: {updatedAdmin.PlayerName}", _plugin);
+        var menu = new WasdMenu($"Toggle Flags: {updatedAdmin.PlayerName}", _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var flag in AvailableFlags)
         {
@@ -1145,7 +1145,7 @@ public class ChatCommandHandler
 
     private void ShowFlagSelectionMenuForEdit(CCSPlayerController admin, Admin targetAdmin)
     {
-        var menu = new WasdMenu($"Set Role: {targetAdmin.PlayerName}", _plugin);
+        var menu = new WasdMenu($"Set Role: {targetAdmin.PlayerName}", _plugin) { WasdMenu_FreezePlayer = true };
 
         menu.AddItem("Full Admin (@css/root)", (p, o) => ExecuteSetFlags(p, targetAdmin, "@css/root"));
         menu.AddItem("Moderator", (p, o) => ExecuteSetFlags(p, targetAdmin, "@css/kick,@css/ban,@css/chat"));
@@ -1179,7 +1179,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new WasdMenu("Set Group - Select Admin", _plugin);
+        var menu = new WasdMenu("Set Group - Select Admin", _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var targetAdmin in admins.Take(7))
         {
@@ -1205,7 +1205,7 @@ public class ChatCommandHandler
             return;
         }
 
-        var menu = new WasdMenu($"Group for {targetName}", _plugin);
+        var menu = new WasdMenu($"Group for {targetName}", _plugin) { WasdMenu_FreezePlayer = true };
 
         foreach (var group in groups)
         {

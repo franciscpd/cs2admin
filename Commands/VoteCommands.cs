@@ -69,7 +69,7 @@ public class VoteCommands
     {
         if (_plugin == null) return;
 
-        var menu = new WasdMenu("Vote Kick - Select Player", _plugin);
+        var menu = new WasdMenu("Vote Kick - Select Player", _plugin) { WasdMenu_FreezePlayer = true };
 
         var players = Utilities.GetPlayers()
             .Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV
@@ -155,7 +155,7 @@ public class VoteCommands
     {
         if (_plugin == null) return;
 
-        var menu = new WasdMenu("Vote Map - Select Map", _plugin);
+        var menu = new WasdMenu("Vote Map - Select Map", _plugin) { WasdMenu_FreezePlayer = true };
 
         if (_config.VoteMaps.Count == 0)
         {

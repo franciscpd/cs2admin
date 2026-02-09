@@ -87,7 +87,7 @@ After that, you can manage admins in-game using `!add_admin` command.
 
 | Command | Description |
 |---------|-------------|
-| `!help` | Show interactive help menu |
+| `!command` | Show interactive command menu |
 | `!votekick [player]` | Start vote to kick player (uses native CS2 vote UI) |
 | `!votepause` | Start vote to pause match |
 | `!voterestart` | Start vote to restart match |
@@ -138,7 +138,7 @@ After that, you can manage admins in-game using `!add_admin` command.
 | `!set_group <steamid\|player> <group>` | @css/root | Assign admin to group |
 | `!reload_admins` | @css/root | Reload admins from database |
 
-**Note:** Admin permissions can be edited via the interactive menu (`!help` > Root Admin Commands > Edit Admin Permissions).
+**Note:** Admin permissions can be edited via the interactive menu (`!command` > Root Admin Commands > Edit Admin Permissions).
 
 ### Console Commands (`css_` prefix)
 
@@ -147,7 +147,7 @@ All chat commands are available as console commands with `css_` prefix:
 
 ## Interactive WASD Menus
 
-When you run admin commands without specifying a player, an interactive menu appears with **keyboard navigation**:
+When you run admin commands without specifying a player, an interactive menu appears with **keyboard navigation**. Players are **frozen in place** while navigating menus to prevent accidental movement and game menu conflicts:
 
 ### Menu Controls
 | Key | Action |
@@ -322,7 +322,7 @@ Use chat or console commands to manage admins:
 !set_group 76561198012345678 moderator
 ```
 
-You can also use the interactive menu (`!help` > Root Admin Commands) to:
+You can also use the interactive menu (`!command` > Root Admin Commands) to:
 - Add/remove admins
 - Edit admin permissions (toggle individual flags or set role presets)
 - Assign admins to groups
