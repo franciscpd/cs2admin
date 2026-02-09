@@ -114,6 +114,7 @@ public class MatchService
         Server.ExecuteCommand("mp_death_drop_gun 1");
         Server.ExecuteCommand("mp_respawn_on_death_ct 0");
         Server.ExecuteCommand("mp_respawn_on_death_t 0");
+        Server.ExecuteCommand("mp_starting_losses 1");
         Server.ExecuteCommand("mp_warmup_end");
 
         if (_enableLogging && _database != null && admin != null)
@@ -410,6 +411,7 @@ public class MatchService
         Server.ExecuteCommand("mp_maxmoney 16000");
         Server.ExecuteCommand("mp_afterroundmoney 0");
         Server.ExecuteCommand("mp_death_drop_gun 1");
+        Server.ExecuteCommand("mp_starting_losses 1");
 
         if (!stayOnSide)
         {
