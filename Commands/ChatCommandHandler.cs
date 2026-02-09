@@ -111,6 +111,10 @@ public class ChatCommandHandler
             "knife" => HandleKnife(player),
             "teams" => HandleTeams(player),
 
+            // Knife round side choice
+            "stay" => HandleStay(player),
+            "switch" => HandleSwitch(player),
+
             // Admin management commands
             "add_admin" => _adminManagementCommands.HandleAddAdmin(player, args),
             "remove_admin" => _adminManagementCommands.HandleRemoveAdmin(player, args),
@@ -812,6 +816,44 @@ public class ChatCommandHandler
 
         _selectedForTeam1.Clear();
         ShowTeamSelectionMenu(player);
+        return true;
+    }
+
+    private bool HandleStay(CCSPlayerController player)
+    {
+        return HandleSideChoice(player, stayOnSide: true);
+    }
+
+    private bool HandleSwitch(CCSPlayerController player)
+    {
+        return HandleSideChoice(player, stayOnSide: false);
+    }
+
+    private bool HandleSideChoice(CCSPlayerController player, bool stayOnSide)
+    {
+        if (!_matchService.WaitingForSideChoice)
+        {
+            player.PrintToChat($"{_config.ChatPrefix} No side choice is pending.");
+            return true;
+        }
+
+        if ((int)player.Team != _matchService.KnifeRoundWinnerTeam)
+        {
+            player.PrintToChat($"{_config.ChatPrefix} Only the winning team can choose sides.");
+            return true;
+        }
+
+        // Cancel the Panorama vote if it's running
+        if (_voteService.PanoramaVote.IsVoteInProgress())
+        {
+            _voteService.PanoramaVote.CancelVote();
+        }
+
+        var choice = stayOnSide ? "STAY" : "SWITCH";
+        var teamName = _matchService.KnifeRoundWinnerTeam == 2 ? "Terrorists" : "Counter-Terrorists";
+        Server.PrintToChatAll($"{_config.ChatPrefix} {teamName} chose to {choice}! Match starting!");
+
+        _matchService.ChooseSide(stayOnSide);
         return true;
     }
 

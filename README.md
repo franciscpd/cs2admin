@@ -221,7 +221,7 @@ Configuration is stored in `addons/counterstrikesharp/configs/plugins/CS2Admin/C
   "MinPlayersToStart": 2,
   "EnableKnifeRound": true,
   "KnifeRoundMessage": "Knife round! Winner chooses side.",
-  "KnifeRoundWinnerMessage": "{team} won the knife round! Type !stay or !switch to choose side."
+  "KnifeRoundWinnerMessage": "{team} won the knife round! Type !stay or !switch (or vote F1/F2)"
 }
 ```
 
@@ -288,7 +288,7 @@ When enabled, a knife-only round is played before the match starts:
 1. Admin uses `!start` to end warmup
 2. Knife round begins - players only have knives
 3. The winning team is announced
-4. Winning team captain types `!stay` or `!switch` to choose side
+4. Winning team votes F1 (Stay) / F2 (Switch), or any winning team player types `!stay` or `!switch`
 5. Match begins with the chosen sides
 
 **Manual knife mode:** Admins can toggle knife-only mode at any time with `!knife`
