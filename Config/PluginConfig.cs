@@ -20,6 +20,19 @@ public class PluginConfig : BasePluginConfig
     [JsonPropertyName("MinimumVotersRequired")]
     public int MinimumVotersRequired { get; set; } = 3;
 
+    // Pause Settings
+    [JsonPropertyName("TeamPauseLimit")]
+    public int TeamPauseLimit { get; set; } = 3;
+
+    [JsonPropertyName("VotePauseDurationSeconds")]
+    public int VotePauseDurationSeconds { get; set; } = 60;
+
+    [JsonPropertyName("DisconnectPauseDurationSeconds")]
+    public int DisconnectPauseDurationSeconds { get; set; } = 120;
+
+    [JsonPropertyName("EnableDisconnectPause")]
+    public bool EnableDisconnectPause { get; set; } = true;
+
     [JsonPropertyName("DefaultBanReason")]
     public string DefaultBanReason { get; set; } = "Banned by admin";
 

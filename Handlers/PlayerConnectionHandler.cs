@@ -32,6 +32,9 @@ public class PlayerConnectionHandler
         if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
             return HookResult.Continue;
 
+        // Check if this reconnect should unpause a disconnect pause
+        _matchService.OnPlayerReconnect(player.SteamID);
+
         // Check for active ban
         var ban = _banService.GetActiveBan(player.SteamID);
         if (ban != null)
@@ -104,6 +107,25 @@ public class PlayerConnectionHandler
 
         // Clean up session mute
         _muteService.RemoveSessionMute(player.SteamID);
+
+        // Auto-pause on disconnect during live match
+        if (_config.EnableDisconnectPause &&
+            !_matchService.IsPaused &&
+            !_matchService.IsWarmup &&
+            !_matchService.IsKnifeRound &&
+            !_matchService.WaitingForSideChoice)
+        {
+            var team = (int)player.Team;
+            if (team == 2 || team == 3)
+            {
+                var playerName = player.PlayerName;
+                var result = _matchService.PauseForDisconnect(player.SteamID, team);
+                if (result.Success)
+                {
+                    Server.PrintToChatAll($"{_config.ChatPrefix} {playerName} disconnected. Match paused for {_config.DisconnectPauseDurationSeconds / 60} minutes.");
+                }
+            }
+        }
 
         return HookResult.Continue;
     }

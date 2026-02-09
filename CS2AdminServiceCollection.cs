@@ -39,7 +39,9 @@ public class CS2AdminServiceCollection : IDisposable
         BanService = new BanService(Database, config.EnableLogging);
         MuteService = new MuteService(Database, config.EnableLogging);
         PlayerService = new PlayerService(Database, config.EnableLogging);
-        MatchService = new MatchService(Database, config.EnableLogging, config.WarmupMoney);
+        MatchService = new MatchService(Database, config.EnableLogging, config.WarmupMoney,
+            config.TeamPauseLimit, config.VotePauseDurationSeconds, config.DisconnectPauseDurationSeconds,
+            config.ChatPrefix);
         MatchService.SetPlugin(plugin);
 
         VoteService = new VoteService(
@@ -78,7 +80,18 @@ public class CS2AdminServiceCollection : IDisposable
                 break;
 
             case VoteType.Pause:
-                MatchService.PauseMatch();
+                var team = (int)vote.Initiator.Team;
+                var pauseResult = MatchService.PauseMatchTimed(PauseType.Vote, team, Config.VotePauseDurationSeconds);
+                if (!pauseResult.Success)
+                {
+                    BroadcastMessage(pauseResult.Message);
+                }
+                else
+                {
+                    var teamName = team == 2 ? "T" : "CT";
+                    var remaining = MatchService.GetTeamPausesRemaining(team);
+                    BroadcastMessage($"{teamName} tactical pause ({remaining} remaining).");
+                }
                 break;
 
             case VoteType.Restart:

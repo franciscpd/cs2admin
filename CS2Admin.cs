@@ -126,8 +126,9 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
 
         if (!Config.EnableWarmupMode) return;
 
-        // Reset knife round state
+        // Reset knife round and pause state
         _services.MatchService.ResetKnifeRoundState();
+        _services.MatchService.ResetPauseState();
 
         // Delay warmup start to ensure server is ready
         AddTimer(2.0f, () =>
