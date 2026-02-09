@@ -1,6 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Utils;
 using CS2Admin.Database;
 using CS2Admin.Models;
 
@@ -22,6 +23,8 @@ public class MatchService
     private bool _isKnifeOnly;
     private int _knifeRoundWinnerTeam; // 2 = T, 3 = CT
     private bool _waitingForSideChoice;
+    private string? _team1Name;
+    private string? _team2Name;
 
     // Pause state machine
     private PauseType _activePauseType = PauseType.None;
@@ -40,6 +43,8 @@ public class MatchService
     public int KnifeRoundWinnerTeam => _knifeRoundWinnerTeam;
     public PauseType ActivePauseType => _activePauseType;
     public int PauseRemainingSeconds => _pauseRemainingSeconds;
+    public string? Team1Name => _team1Name;
+    public string? Team2Name => _team2Name;
 
     public int GetTeamPausesRemaining(int team) => _teamPauseLimit - _teamPausesUsed.GetValueOrDefault(team, 0);
 
@@ -526,11 +531,29 @@ public class MatchService
         }
     }
 
+    public void ApplyTeams(List<CCSPlayerController> team1Players, List<CCSPlayerController> team2Players)
+    {
+        _team1Name = team1Players[0].PlayerName;
+        _team2Name = team2Players[0].PlayerName;
+
+        foreach (var player in team1Players)
+        {
+            player.SwitchTeam(CsTeam.Terrorist);
+        }
+
+        foreach (var player in team2Players)
+        {
+            player.SwitchTeam(CsTeam.CounterTerrorist);
+        }
+    }
+
     public void ResetKnifeRoundState()
     {
         _isKnifeRound = false;
         _isKnifeOnly = false;
         _waitingForSideChoice = false;
         _knifeRoundWinnerTeam = 0;
+        _team1Name = null;
+        _team2Name = null;
     }
 }

@@ -23,6 +23,7 @@ public class ChatCommandHandler
     private readonly VoteService _voteService;
     private readonly AdminManagementCommands _adminManagementCommands;
     private readonly AdminService _adminService;
+    private HashSet<ulong> _selectedForTeam1 = new();
 
     private static readonly string[] AvailableFlags =
     [
@@ -108,6 +109,7 @@ public class ChatCommandHandler
             "warmup" => HandleWarmup(player),
             "endwarmup" => HandleEndWarmup(player),
             "knife" => HandleKnife(player),
+            "teams" => HandleTeams(player),
 
             // Admin management commands
             "add_admin" => _adminManagementCommands.HandleAddAdmin(player, args),
@@ -794,6 +796,91 @@ public class ChatCommandHandler
         return true;
     }
 
+    private bool HandleTeams(CCSPlayerController player)
+    {
+        if (!AdminManager.PlayerHasPermissions(player, "@css/generic"))
+        {
+            player.PrintToChat($"{_config.ChatPrefix} You don't have permission to use this command.");
+            return true;
+        }
+
+        if (!_matchService.IsWarmup)
+        {
+            player.PrintToChat($"{_config.ChatPrefix} Teams can only be set during warmup.");
+            return true;
+        }
+
+        _selectedForTeam1.Clear();
+        ShowTeamSelectionMenu(player);
+        return true;
+    }
+
+    private void ShowTeamSelectionMenu(CCSPlayerController admin)
+    {
+        var players = GetSelectablePlayers();
+
+        if (players.Count < 2)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} Need at least 2 players to set teams.");
+            return;
+        }
+
+        var menu = new WasdMenu("Select players for Team 1 (T)", _plugin);
+
+        foreach (var target in players)
+        {
+            var steamId = target.SteamID;
+            var isSelected = _selectedForTeam1.Contains(steamId);
+            var label = isSelected ? $"[X] {target.PlayerName}" : $"[ ] {target.PlayerName}";
+
+            menu.AddItem(label, (p, o) =>
+            {
+                if (_selectedForTeam1.Contains(steamId))
+                    _selectedForTeam1.Remove(steamId);
+                else
+                    _selectedForTeam1.Add(steamId);
+
+                ShowTeamSelectionMenu(p);
+            });
+        }
+
+        menu.AddItem("✓ Confirm Teams", (p, o) => ExecuteTeamSelection(p));
+        menu.AddItem("Cancel", (p, o) => { _selectedForTeam1.Clear(); });
+
+        menu.Display(admin, 60);
+    }
+
+    private void ExecuteTeamSelection(CCSPlayerController admin)
+    {
+        var allPlayers = GetSelectablePlayers();
+        var team1 = allPlayers.Where(p => _selectedForTeam1.Contains(p.SteamID)).ToList();
+        var team2 = allPlayers.Where(p => !_selectedForTeam1.Contains(p.SteamID)).ToList();
+
+        if (team1.Count == 0)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} You must select at least one player for Team 1.");
+            ShowTeamSelectionMenu(admin);
+            return;
+        }
+
+        if (team2.Count == 0)
+        {
+            admin.PrintToChat($"{_config.ChatPrefix} You must leave at least one player for Team 2.");
+            ShowTeamSelectionMenu(admin);
+            return;
+        }
+
+        _matchService.ApplyTeams(team1, team2);
+        _selectedForTeam1.Clear();
+
+        var team1Name = _matchService.Team1Name;
+        var team2Name = _matchService.Team2Name;
+
+        Server.PrintToChatAll($"{_config.ChatPrefix} Teams: {team1Name} (T) vs {team2Name} (CT)");
+        Server.PrintToChatAll($"{_config.ChatPrefix} T: {string.Join(", ", team1.Select(p => p.PlayerName))}");
+        Server.PrintToChatAll($"{_config.ChatPrefix} CT: {string.Join(", ", team2.Select(p => p.PlayerName))}");
+    }
+
     #endregion
 
     #region Help Command
@@ -864,6 +951,7 @@ public class ChatCommandHandler
             menu.AddItem("!warmup/!endwarmup - Warmup control", DisableOption.DisableShowNumber);
             menu.AddItem("!start - Start match", DisableOption.DisableShowNumber);
             menu.AddItem("!knife - Toggle knife only", DisableOption.DisableShowNumber);
+            menu.AddItem("!teams - Set teams (warmup)", DisableOption.DisableShowNumber);
         }
 
         menu.AddItem("« Back", (p, o) => HandleHelp(p));
