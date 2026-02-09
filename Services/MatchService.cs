@@ -391,6 +391,7 @@ public class MatchService
         _knifeRoundWinnerTeam = winnerTeam;
         _waitingForSideChoice = true;
         _isKnifeRound = false;
+        Server.ExecuteCommand("mp_pause_match");
     }
 
     public void ChooseSide(bool stayOnSide, CCSPlayerController? admin = null)
@@ -550,5 +551,25 @@ public class MatchService
         _knifeRoundWinnerTeam = 0;
         _team1Name = null;
         _team2Name = null;
+    }
+
+    public void AssignPlayerColor(CCSPlayerController player)
+    {
+        if (player.PlayerPawn?.Value == null) return;
+
+        var team = (int)player.Team;
+        if (team != 2 && team != 3) return;
+
+        var teammates = Utilities.GetPlayers()
+            .Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && (int)p.Team == team)
+            .OrderBy(p => p.Slot)
+            .ToList();
+
+        var index = teammates.IndexOf(player);
+        if (index < 0) return;
+
+        var color = index % 5;
+        player.CompTeammateColor = color;
+        Utilities.SetStateChanged(player, "CCSPlayerController", "m_iCompTeammateColor");
     }
 }

@@ -227,6 +227,15 @@ public class CS2Admin : BasePlugin, IPluginConfig<PluginConfig>
             });
         }
 
+        // Assign unique teammate color on scoreboard/minimap
+        AddTimer(0.1f, () =>
+        {
+            if (player.IsValid)
+            {
+                _services.MatchService.AssignPlayerColor(player);
+            }
+        });
+
         return HookResult.Continue;
     }
 
