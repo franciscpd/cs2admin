@@ -373,17 +373,10 @@ public class MatchService
         Server.ExecuteCommand("mp_startmoney 0");
         Server.ExecuteCommand("mp_maxmoney 0");
 
-        // First restart to apply settings
-        Server.ExecuteCommand("mp_restartgame 1");
-
-        // Second restart after delay to ensure settings are applied
-        _plugin?.AddTimer(3.0f, () =>
-        {
-            if (_isKnifeRound)
-            {
-                Server.ExecuteCommand("mp_restartgame 1");
-            }
-        });
+        // End CS2 engine warmup - without this the engine stays in warmup mode
+        // and rounds don't finalize properly after kills
+        Server.ExecuteCommand("mp_warmup_pausetimer 0");
+        Server.ExecuteCommand("mp_warmup_end");
 
         if (_enableLogging && _database != null && admin != null)
         {
